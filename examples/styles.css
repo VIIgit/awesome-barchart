@@ -1,0 +1,169 @@
+/* Barchart Examples - Custom Styles */
+
+/* ============================================================================
+   PAGE LAYOUT
+   ============================================================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #f5f7fa;
+  color: #333;
+}
+
+h1 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 40px;
+}
+
+/* ============================================================================
+   CHART SECTIONS
+   ============================================================================ */
+
+.chart-section {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.chart-section h2 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.chart-section p {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.chart-container {
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* ============================================================================
+   COLOR CUSTOMIZATIONS
+   ============================================================================ */
+
+/* Example 1: Default blue bars */
+#chart1 .bar {
+  fill: #4a90d9;
+}
+
+/* Example 2: Green bars for monthly */
+#chart2 .bar {
+  fill: #27ae60;
+}
+
+/* Example 3: Purple bars for weekly */
+#chart3 .bar {
+  fill: #9b59b6;
+}
+
+/* Example 4: Orange bars for weekday */
+#chart4 .bar {
+  fill: #e67e22;
+}
+
+/* Example 5: Teal for yearly */
+#chart5 .bar {
+  fill: #16a085;
+}
+
+/* Example 6: High-low blue range */
+#chart6 .bar.high-low {
+  fill: #3498db;
+}
+
+/* Example 7: High-low red range (temperature) */
+#chart7 .bar.high-low {
+  fill: #e74c3c;
+}
+
+/* Example 8: High-low green range (stock) */
+#chart8 .bar.high-low {
+  fill: #27ae60;
+}
+
+/* ============================================================================
+   CODE DISPLAY
+   ============================================================================ */
+
+.code-toggle {
+  background: #ecf0f1;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  margin-top: 15px;
+  color: #555;
+}
+
+.code-toggle:hover {
+  background: #dfe6e9;
+}
+
+.code-block {
+  display: none;
+  margin-top: 15px;
+  background: #2d3436;
+  border-radius: 4px;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.code-block.visible {
+  display: block;
+}
+
+.code-block pre {
+  margin: 0;
+  color: #dfe6e9;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.code-block code {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
+  .chart-section {
+    padding: 16px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  .chart-section h2 {
+    font-size: 16px;
+  }
+}

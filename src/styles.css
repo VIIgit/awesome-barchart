@@ -1,0 +1,136 @@
+/* Barchart Library v2 - Core Styles */
+
+/* ============================================================================
+   BASE STYLES
+   ============================================================================ */
+
+.barchart {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background: #ffffff;
+}
+
+/* ============================================================================
+   GRID
+   ============================================================================ */
+
+.grid-line {
+  stroke: #e0e0e0;
+  stroke-width: 1;
+  stroke-dasharray: 4, 4;
+}
+
+/* ============================================================================
+   AXES
+   ============================================================================ */
+
+.axis-line {
+  stroke: #333;
+  stroke-width: 1;
+}
+
+.axis-tick {
+  stroke: #333;
+  stroke-width: 1;
+}
+
+.axis-label {
+  font-size: 11px;
+  fill: #666;
+}
+
+.axis-title {
+  font-size: 13px;
+  font-weight: 600;
+  fill: #333;
+}
+
+.year-label {
+  font-size: 12px;
+  font-weight: 600;
+  fill: #444;
+}
+
+.week-label {
+  font-size: 10px;
+  fill: #666;
+}
+
+/* ============================================================================
+   BARS
+   ============================================================================ */
+
+.bar {
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.bar:hover {
+  opacity: 0.8;
+}
+
+.high-low-bar {
+  cursor: pointer;
+}
+
+.high-low-bar:hover .bar {
+  opacity: 0.8;
+}
+
+.avg-marker {
+  stroke-linecap: round;
+}
+
+/* ============================================================================
+   TITLE
+   ============================================================================ */
+
+.chart-title {
+  font-size: 16px;
+  font-weight: 600;
+  fill: #222;
+}
+
+/* ============================================================================
+   TOOLTIP
+   ============================================================================ */
+
+.chart-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  line-height: 1.5;
+}
+
+.chart-tooltip strong {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .axis-label {
+    font-size: 9px;
+  }
+  
+  .axis-title {
+    font-size: 11px;
+  }
+  
+  .chart-title {
+    font-size: 14px;
+  }
+  
+  .year-label {
+    font-size: 10px;
+  }
+}

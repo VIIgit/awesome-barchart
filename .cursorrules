@@ -1,0 +1,286 @@
+# Copilot Instructions for Barchart Library v2
+
+## Project Overview
+
+This is a modern, mode-driven JavaScript library for creating interactive bar charts with multiple visualization types. The library uses SVG for rendering and supports various chart types with automatic data aggregation, high-low visualization, and flexible x-axis grouping.
+
+## Key Components
+
+- `barchart.js`: Main library file containing the `createBarchart` function with mode-driven architecture
+- `index.html`: Example usage and test cases demonstrating all chart types
+- `styles.css`: Styling for charts, axes, tooltips, and responsive design
+- `README.md`: Complete documentation for users and developers
+
+## Architecture Principles
+
+### Generic Data Input & Mode-Driven Axis Grouping
+
+- The chart accepts a generic array of data objects, each with at least a `date` (ISO string or Date) and `value` property. Additional properties are allowed for extensibility, such as `highValue` and `lowValue` for high-low charts.
+
+- The x-axis grouping and labeling is determined by a `chartType` property in the config object. Supported modes include: `byDay`, `byWeek`, `byMonth`, `byWeekday`, `byYear`, and custom groupings.
+
+- **Important**: `chartType` configures/controls the x-axis grouping and formatting **only**; the bars are always rendered based on the provided data (e.g., `{ date: '2025-01-01', value: 42 }`). The library automatically aggregates data according to the selected mode.
+
+- Example config:
+
+  ```js
+  const config = {
+    chartType: 'byMonth', // Controls x-axis grouping/formatting
+    renderType: 'bar',    // 'bar' (default) or 'high-low'
+    data: [
+      { date: '2025-01-01', value: 42, highValue: 48, lowValue: 20 },
+      // ...
+    ],
+    // ...other options
+  };
+  ```
+
+### Data Examples
+
+**Plain Bar Chart Data:**
+
+```js
+// Simple daily values - minimal data structure
+const dailyData = [
+  { date: '2025-01-01', value: 42 },
+  { date: '2025-01-02', value: 58 },
+  { date: '2025-01-03', value: 35 },
+  { date: '2025-01-04', value: 71 },
+  { date: '2025-01-05', value: 49 }
+];
+
+// Monthly aggregated data (library will aggregate if using byMonth)
+const monthlyData = [
+  { date: '2024-01-15', value: 1250 },
+  { date: '2024-02-10', value: 1420 },
+  { date: '2024-03-20', value: 1680 },
+  { date: '2024-04-05', value: 1340 },
+  { date: '2024-05-12', value: 1590 }
+];
+
+// Usage for plain bar chart
+const config = {
+  chartType: 'byDay',    // or 'byWeek', 'byMonth', 'byWeekday', 'byYear'
+  renderType: 'bar',
+  data: dailyData,
+  // ...other options
+};
+```
+
+**High-Low Chart Data:**
+
+```js
+// High-low range data - requires value, highValue, lowValue
+const temperatureData = [
+  { date: '2025-01-01', value: 15, highValue: 22, lowValue: 8 },
+  { date: '2025-01-02', value: 17, highValue: 24, lowValue: 12 },
+  { date: '2025-01-03', value: 14, highValue: 19, lowValue: 9 },
+  { date: '2025-01-04', value: 16, highValue: 23, lowValue: 11 },
+  { date: '2025-01-05', value: 18, highValue: 25, lowValue: 13 }
+];
+
+// Stock price ranges
+const stockData = [
+  { date: '2025-01-01', value: 150.25, highValue: 155.80, lowValue: 148.50 },
+  { date: '2025-01-02', value: 152.40, highValue: 157.20, lowValue: 150.10 },
+  { date: '2025-01-03', value: 148.90, highValue: 153.45, lowValue: 145.30 },
+  { date: '2025-01-04', value: 151.60, highValue: 156.90, lowValue: 149.20 },
+  { date: '2025-01-05', value: 154.30, highValue: 159.50, lowValue: 152.80 }
+];
+
+// Usage for high-low chart
+const config = {
+  chartType: 'byDay',
+  renderType: 'high-low',
+  data: temperatureData,  // or stockData
+  // ...other options
+};
+
+// Note: If using plain data (only 'value' property) with renderType: 'high-low',
+// the library will aggregate and calculate high/low/average automatically based on chartType
+const plainDataForHighLow = [
+  { date: '2025-01-01', value: 42 },
+  { date: '2025-01-02', value: 58 },
+  { date: '2025-01-03', value: 35 },
+  // When aggregated by week/month, library calculates:
+  // - highValue: max of all values in period
+  // - lowValue: min of all values in period
+  // - value: average of all values in period
+];
+```
+
+## Data Aggregation Utility Feature
+
+You can convert plain data into grouped high-low-average format for any supported chartType (e.g., 'byMonth') using a utility function:
+
+```js
+// Example: Aggregate daily data into monthly high-low-average
+const plainDataForHighLow = [
+  { date: '2025-01-01', value: 42 },
+  { date: '2025-01-02', value: 58 },
+  { date: '2025-01-03', value: 35 },
+  // ...
+];
+
+const aggregatedByMonth = aggregates(plainDataForHighLow, 'byMonth');
+// Result:
+// [
+//   { date: '2025-01', value: 45, highValue: 58, lowValue: 35 },
+//   ...
+// ]
+```
+
+**Function signature:**
+
+```js
+/**
+ * Aggregates plain data by the given mode ('byMonth', 'byWeek', etc.)
+ * @param {Array} data - Array of {date, value}
+ * @param {string} mode - One of 'byMonth', 'byWeek', 'byYear', etc.
+ * @returns {Array} Array of {date, value, highValue, lowValue}
+ */
+function aggregates(data, mode) { /* ...implementation... */ }
+```
+
+This enables you to easily transform daily or ungrouped data into the grouped format required for high-low charts or summary visualizations.
+
+### Chart Types
+
+- `byDay`: Individual daily bars, no aggregation
+- `byWeek`: Weekly aggregated data, multi-level axis (year + week number)
+- `byMonth`: Monthly aggregated data, shows month names and years
+- `byWeekday`: Average values by day of week (Mon-Sun)
+- `byYear`: Yearly aggregated data
+
+### Render Types
+
+- `bar`: Standard bar chart (default)
+- `high-low`: Range visualization showing high, low, and average values
+
+When `renderType: 'high-low'` is selected, aggregate the data for each group (e.g., month, week) and calculate:
+
+- `highValue`: the maximum value in the group
+- `lowValue`: the minimum value in the group
+- `value`: the average (mean) value in the group
+
+The chart renders a bar from `lowValue` to `highValue` with a marker for the average.
+
+## Axis Rendering Logic
+
+The axis rendering must:
+
+- Group data according to the selected mode (e.g., by month, week, weekday, etc.)
+- Render multi-level axis labels as needed (e.g., year above week, month above day)
+- Thin or deduplicate labels to avoid crowding (e.g., show week numbers only on Mondays)
+- Draw visual group markers (e.g., lines for month or week boundaries) as appropriate for the mode
+
+## Implementation Guidance
+
+
+- Keep axis rendering logic **generic and mode-driven**; avoid hardcoding for specific chart types
+- Use utility functions for date grouping: `getWeek()`, `getWeekStart()`, `getMonthStart()`, `getYearStart()`
+- Always deduplicate axis labels and avoid overlapping text
+- When adding new grouping modes, update both:
+  1. Data aggregation logic (in the aggregation section)
+  2. Axis rendering logic (in the x-axis section)
+- Always document new modes and config options in this file, `README.md`, and `agents/instructions.md` (if present)
+
+## Coding Patterns
+
+- Use SVG namespace for creating elements: `document.createElementNS('http://www.w3.org/2000/svg', 'element')`
+- Configuration-driven approach with `config` object and sensible defaults
+- Event-driven interactions for tooltips using mouseenter/mouseleave
+- Date utilities: `getWeek()`, `getWeekStart()`, `getMonthStart()`, `getYearStart()`
+- Conditional rendering based on `config.chartType` and `config.renderType`
+- Automatic data normalization and validation
+- Scale functions for y-axis (linear/log) and consistent bar positioning
+
+## Best Practices
+
+- Always normalize input data (convert date strings to Date objects)
+- Filter out invalid data points early (NaN values, invalid dates)
+- Include proper margins and axis labels
+- Use responsive design for different screen sizes
+- Optimize x-axis labels to prevent crowding with intelligent thinning
+- Create text elements only when there's content to display
+- Deduplicate labels by tracking processed items (e.g., Set for year-week combinations)
+- Calculate bar dimensions dynamically based on available space
+- Handle edge cases: empty data, single data point, equal min/max values
+
+## Common Tasks
+
+### Adding new chart types
+
+1. Add new case in the aggregation logic section
+2. Implement grouping and value calculation
+3. Update x-axis rendering with appropriate labels
+4. Add example in `index.html`
+5. Document in `README.md` and this file
+
+### Modifying axis labels
+
+- Update the x-axis rendering section in `createBarchart()`
+- Consider multi-level labels if needed
+- Implement label thinning to avoid overlap
+- Use appropriate CSS classes for styling
+
+### Adding interactions
+
+- Use event listeners (mouseenter, mouseleave) for hover effects
+- Update or create tooltip with relevant information
+- Consider touch events for mobile support
+
+### Styling updates
+
+- Modify `styles.css` for visual changes
+- Use CSS classes for different elements: `.bar`, `.axis`, `.year-label`, `.week-label`, etc.
+- Maintain consistency with existing design patterns
+
+## Data Flow
+
+1. Input data is normalized (date strings → Date objects)
+2. Data is validated and filtered
+3. Data is aggregated based on `chartType`
+4. Bars are rendered based on `renderType` (bar or high-low)
+5. Axis labels are generated based on `chartType`
+6. Interactive elements (tooltips) are attached
+
+## Testing
+
+- Open `index.html` in browser to test changes
+- Verify all chart types render correctly
+- Test with edge cases: empty data, single point, large datasets
+- Check tooltips display proper information
+- Ensure axis labels don't overlap
+- Verify high-low charts show correct ranges
+- Test responsive behavior on different screen sizes
+
+## File Organization
+
+```text
+barchart-v2/
+├── /src/barchart.js       # Core library
+├── /src/styles.css        # basic styling
+├── /examples/index.html        # Examples and demos
+├── /examples/styles.css        # Custom styling, potenially overwriting /src/styles.css for colors
+├── README.md         # User documentation
+└── .cursorrules      # This file - AI agent guidance
+```
+
+## Version Control
+
+- Keep commits focused and descriptive
+- Document breaking changes in commit messages
+- Update README.md when adding features
+- Maintain backward compatibility when possible
+
+## Future Enhancements
+
+Consider these patterns when extending the library:
+
+- Additional aggregation modes (quarters, custom periods)
+- Multiple series support
+- Animation options
+- Export to image/SVG
+- Custom tooltip formatting
+- Accessibility improvements (ARIA labels, keyboard navigation)

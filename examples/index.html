@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barchart Library v2 - Examples</title>
+  <link rel="stylesheet" href="../src/styles.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Barchart Library v2</h1>
+  <p class="subtitle">Interactive bar charts with multiple visualization types</p>
+
+  <!-- Example 1: Daily Bar Chart -->
+  <div class="chart-section">
+    <h2>1. Daily Bar Chart (byDay)</h2>
+    <p>Individual daily bars without aggregation. Shows each data point as-is.</p>
+    <div class="chart-container" id="chart1"></div>
+    <button class="code-toggle" onclick="toggleCode('code1')">Show Code</button>
+    <div class="code-block" id="code1">
+      <pre><code>const dailyData = [
+  { date: '2025-01-01', value: 42 },
+  { date: '2025-01-02', value: 58 },
+  { date: '2025-01-03', value: 35 },
+  { date: '2025-01-04', value: 71 },
+  { date: '2025-01-05', value: 49 },
+  // ...more data
+];
+
+createBarchart({
+  container: '#chart1',
+  data: dailyData,
+  chartType: 'byDay',
+  renderType: 'bar',
+  title: 'Daily Values',
+  yAxisLabel: 'Value'
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 2: Monthly Bar Chart -->
+  <div class="chart-section">
+    <h2>2. Monthly Aggregated Bar Chart (byMonth)</h2>
+    <p>Data is aggregated by month. Shows average value per month with year labels.</p>
+    <div class="chart-container" id="chart2"></div>
+    <button class="code-toggle" onclick="toggleCode('code2')">Show Code</button>
+    <div class="code-block" id="code2">
+      <pre><code>const yearData = generateYearData(2024);
+
+createBarchart({
+  container: '#chart2',
+  data: yearData,
+  chartType: 'byMonth',
+  renderType: 'bar',
+  title: 'Monthly Averages 2024',
+  yAxisLabel: 'Average Value'
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 3: Weekly Bar Chart -->
+  <div class="chart-section">
+    <h2>3. Weekly Aggregated Bar Chart (byWeek)</h2>
+    <p>Data is aggregated by week. Shows week numbers with year labels.</p>
+    <div class="chart-container" id="chart3"></div>
+    <button class="code-toggle" onclick="toggleCode('code3')">Show Code</button>
+    <div class="code-block" id="code3">
+      <pre><code>createBarchart({
+  container: '#chart3',
+  data: quarterData,
+  chartType: 'byWeek',
+  renderType: 'bar',
+  title: 'Weekly Averages Q1 2025',
+  yAxisLabel: 'Average Value'
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 4: Weekday Bar Chart -->
+  <div class="chart-section">
+    <h2>4. Weekday Aggregated Bar Chart (byWeekday)</h2>
+    <p>Data is averaged by day of week (Sun-Sat). Great for spotting weekly patterns.</p>
+    <div class="chart-container" id="chart4"></div>
+    <button class="code-toggle" onclick="toggleCode('code4')">Show Code</button>
+    <div class="code-block" id="code4">
+      <pre><code>createBarchart({
+  container: '#chart4',
+  data: monthData,
+  chartType: 'byWeekday',
+  renderType: 'bar',
+  title: 'Average by Day of Week',
+  yAxisLabel: 'Average Value',
+  width: 500
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 5: Yearly Bar Chart -->
+  <div class="chart-section">
+    <h2>5. Yearly Aggregated Bar Chart (byYear)</h2>
+    <p>Data is aggregated by year. Shows average value per year.</p>
+    <div class="chart-container" id="chart5"></div>
+    <button class="code-toggle" onclick="toggleCode('code5')">Show Code</button>
+    <div class="code-block" id="code5">
+      <pre><code>createBarchart({
+  container: '#chart5',
+  data: multiYearData,
+  chartType: 'byYear',
+  renderType: 'bar',
+  title: 'Yearly Averages 2020-2025',
+  yAxisLabel: 'Average Value',
+  width: 500
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 6: Monthly High-Low Chart -->
+  <div class="chart-section">
+    <h2>6. Monthly High-Low Chart (byMonth + high-low)</h2>
+    <p>Shows range (min to max) with average marker for each month. Aggregated from daily data.</p>
+    <div class="chart-container" id="chart6"></div>
+    <button class="code-toggle" onclick="toggleCode('code6')">Show Code</button>
+    <div class="code-block" id="code6">
+      <pre><code>createBarchart({
+  container: '#chart6',
+  data: yearData,
+  chartType: 'byMonth',
+  renderType: 'high-low',
+  title: 'Monthly Range with Average',
+  yAxisLabel: 'Value Range'
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 7: Daily High-Low Chart (Temperature) -->
+  <div class="chart-section">
+    <h2>7. Daily High-Low Chart - Temperature Data</h2>
+    <p>Pre-aggregated high-low data (e.g., daily temperature readings with min/max).</p>
+    <div class="chart-container" id="chart7"></div>
+    <button class="code-toggle" onclick="toggleCode('code7')">Show Code</button>
+    <div class="code-block" id="code7">
+      <pre><code>const temperatureData = [
+  { date: '2025-01-01', value: 15, highValue: 22, lowValue: 8 },
+  { date: '2025-01-02', value: 17, highValue: 24, lowValue: 12 },
+  { date: '2025-01-03', value: 14, highValue: 19, lowValue: 9 },
+  // ...more data
+];
+
+createBarchart({
+  container: '#chart7',
+  data: temperatureData,
+  chartType: 'byDay',
+  renderType: 'high-low',
+  title: 'Daily Temperature Range',
+  yAxisLabel: 'Temperature (°C)'
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 8: Weekly High-Low Chart (Stock) -->
+  <div class="chart-section">
+    <h2>8. Weekly High-Low Chart - Stock Data</h2>
+    <p>Stock price ranges aggregated by week, showing high/low/average.</p>
+    <div class="chart-container" id="chart8"></div>
+    <button class="code-toggle" onclick="toggleCode('code8')">Show Code</button>
+    <div class="code-block" id="code8">
+      <pre><code>const stockData = [
+  { date: '2025-01-01', value: 150.25, highValue: 155.80, lowValue: 148.50 },
+  { date: '2025-01-02', value: 152.40, highValue: 157.20, lowValue: 150.10 },
+  // ...more data
+];
+
+createBarchart({
+  container: '#chart8',
+  data: stockData,
+  chartType: 'byWeek',
+  renderType: 'high-low',
+  title: 'Weekly Stock Price Range',
+  yAxisLabel: 'Price ($)'
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 9: Using aggregates() Function -->
+  <div class="chart-section">
+    <h2>9. Using the aggregates() Function</h2>
+    <p>The <code>aggregates(data, mode)</code> function converts plain data into grouped high-low-average format.</p>
+    <div class="chart-container" id="chart9"></div>
+    <button class="code-toggle" onclick="toggleCode('code9')">Show Code</button>
+    <div class="code-block" id="code9">
+      <pre><code>// Plain data with just date and value
+const plainData = [
+  { date: '2025-01-01', value: 42 },
+  { date: '2025-01-02', value: 58 },
+  { date: '2025-01-15', value: 35 },
+  { date: '2025-02-03', value: 71 },
+  { date: '2025-02-20', value: 49 },
+  { date: '2025-03-10', value: 62 }
+];
+
+// Aggregate by month
+const aggregatedByMonth = aggregates(plainData, 'byMonth');
+// Result:
+// [
+//   { date: '2025-01', value: 45, highValue: 58, lowValue: 35, count: 3 },
+//   { date: '2025-02', value: 60, highValue: 71, lowValue: 49, count: 2 },
+//   { date: '2025-03', value: 62, highValue: 62, lowValue: 62, count: 1 }
+// ]
+
+console.log('Aggregated data:', aggregatedByMonth);</code></pre>
+    </div>
+    <div id="aggregation-output" style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 4px; font-family: monospace; font-size: 13px;"></div>
+  </div>
+
+  <script src="../src/barchart.js"></script>
+  <script>
+    // Toggle code visibility
+    function toggleCode(id) {
+      const block = document.getElementById(id);
+      block.classList.toggle('visible');
+    }
+
+    // Generate random data for a full year
+    function generateYearData(year) {
+      const data = [];
+      const startDate = new Date(year, 0, 1);
+      const endDate = new Date(year, 11, 31);
+      
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        data.push({
+          date: d.toISOString().split('T')[0],
+          value: Math.round(50 + Math.random() * 50 + Math.sin(d.getMonth() / 2) * 20)
+        });
+      }
+      return data;
+    }
+
+    // Generate data for a quarter
+    function generateQuarterData(year, quarter) {
+      const data = [];
+      const startMonth = (quarter - 1) * 3;
+      const startDate = new Date(year, startMonth, 1);
+      const endDate = new Date(year, startMonth + 3, 0);
+      
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        data.push({
+          date: d.toISOString().split('T')[0],
+          value: Math.round(30 + Math.random() * 70)
+        });
+      }
+      return data;
+    }
+
+    // Generate multi-year data
+    function generateMultiYearData(startYear, endYear) {
+      const data = [];
+      for (let year = startYear; year <= endYear; year++) {
+        for (let month = 0; month < 12; month++) {
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          for (let day = 1; day <= daysInMonth; day += 3) {
+            data.push({
+              date: `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+              value: Math.round(100 + (year - startYear) * 20 + Math.random() * 50)
+            });
+          }
+        }
+      }
+      return data;
+    }
+
+    // Data for examples
+    const dailyData = [
+      { date: '2025-01-01', value: 42 },
+      { date: '2025-01-02', value: 58 },
+      { date: '2025-01-03', value: 35 },
+      { date: '2025-01-04', value: 71 },
+      { date: '2025-01-05', value: 49 },
+      { date: '2025-01-06', value: 62 },
+      { date: '2025-01-07', value: 55 },
+      { date: '2025-01-08', value: 44 },
+      { date: '2025-01-09', value: 68 },
+      { date: '2025-01-10', value: 51 },
+      { date: '2025-01-11', value: 39 },
+      { date: '2025-01-12', value: 73 },
+      { date: '2025-01-13', value: 47 },
+      { date: '2025-01-14', value: 59 }
+    ];
+
+    const yearData = generateYearData(2024);
+    const quarterData = generateQuarterData(2025, 1);
+    const monthData = generateQuarterData(2025, 1);
+    const multiYearData = generateMultiYearData(2020, 2025);
+
+    const temperatureData = [
+      { date: '2025-01-01', value: 15, highValue: 22, lowValue: 8 },
+      { date: '2025-01-02', value: 17, highValue: 24, lowValue: 12 },
+      { date: '2025-01-03', value: 14, highValue: 19, lowValue: 9 },
+      { date: '2025-01-04', value: 16, highValue: 23, lowValue: 11 },
+      { date: '2025-01-05', value: 18, highValue: 25, lowValue: 13 },
+      { date: '2025-01-06', value: 12, highValue: 18, lowValue: 6 },
+      { date: '2025-01-07', value: 10, highValue: 15, lowValue: 4 },
+      { date: '2025-01-08', value: 13, highValue: 20, lowValue: 7 },
+      { date: '2025-01-09', value: 19, highValue: 26, lowValue: 14 },
+      { date: '2025-01-10', value: 21, highValue: 28, lowValue: 16 }
+    ];
+
+    const stockData = [
+      { date: '2025-01-01', value: 150.25 },
+      { date: '2025-01-02', value: 152.40 },
+      { date: '2025-01-03', value: 148.90 },
+      { date: '2025-01-06', value: 151.60 },
+      { date: '2025-01-07', value: 154.30 },
+      { date: '2025-01-08', value: 156.10 },
+      { date: '2025-01-09', value: 153.80 },
+      { date: '2025-01-10', value: 157.20 },
+      { date: '2025-01-13', value: 159.50 },
+      { date: '2025-01-14', value: 161.30 },
+      { date: '2025-01-15', value: 158.70 },
+      { date: '2025-01-16', value: 160.20 },
+      { date: '2025-01-17', value: 162.80 },
+      { date: '2025-01-20', value: 164.10 },
+      { date: '2025-01-21', value: 163.50 }
+    ];
+
+    // Example 1: Daily Bar Chart
+    createBarchart({
+      container: '#chart1',
+      data: dailyData,
+      chartType: 'byDay',
+      renderType: 'bar',
+      title: 'Daily Values - January 2025',
+      yAxisLabel: 'Value',
+      width: 750,
+      height: 350
+    });
+
+    // Example 2: Monthly Bar Chart
+    createBarchart({
+      container: '#chart2',
+      data: yearData,
+      chartType: 'byMonth',
+      renderType: 'bar',
+      title: 'Monthly Averages 2024',
+      yAxisLabel: 'Average Value',
+      width: 800,
+      height: 350
+    });
+
+    // Example 3: Weekly Bar Chart
+    createBarchart({
+      container: '#chart3',
+      data: quarterData,
+      chartType: 'byWeek',
+      renderType: 'bar',
+      title: 'Weekly Averages Q1 2025',
+      yAxisLabel: 'Average Value',
+      width: 800,
+      height: 350
+    });
+
+    // Example 4: Weekday Bar Chart
+    createBarchart({
+      container: '#chart4',
+      data: monthData,
+      chartType: 'byWeekday',
+      renderType: 'bar',
+      title: 'Average by Day of Week',
+      yAxisLabel: 'Average Value',
+      width: 500,
+      height: 350
+    });
+
+    // Example 5: Yearly Bar Chart
+    createBarchart({
+      container: '#chart5',
+      data: multiYearData,
+      chartType: 'byYear',
+      renderType: 'bar',
+      title: 'Yearly Averages 2020-2025',
+      yAxisLabel: 'Average Value',
+      width: 500,
+      height: 350
+    });
+
+    // Example 6: Monthly High-Low Chart
+    createBarchart({
+      container: '#chart6',
+      data: yearData,
+      chartType: 'byMonth',
+      renderType: 'high-low',
+      title: 'Monthly Range with Average - 2024',
+      yAxisLabel: 'Value Range',
+      width: 800,
+      height: 350
+    });
+
+    // Example 7: Daily High-Low (Temperature)
+    createBarchart({
+      container: '#chart7',
+      data: temperatureData,
+      chartType: 'byDay',
+      renderType: 'high-low',
+      title: 'Daily Temperature Range - January 2025',
+      yAxisLabel: 'Temperature (°C)',
+      width: 700,
+      height: 350
+    });
+
+    // Example 8: Weekly High-Low (Stock)
+    createBarchart({
+      container: '#chart8',
+      data: stockData,
+      chartType: 'byWeek',
+      renderType: 'high-low',
+      title: 'Weekly Stock Price Range - January 2025',
+      yAxisLabel: 'Price ($)',
+      width: 600,
+      height: 350
+    });
+
+    // Example 9: Demonstrate aggregates() function
+    const plainData = [
+      { date: '2025-01-01', value: 42 },
+      { date: '2025-01-02', value: 58 },
+      { date: '2025-01-15', value: 35 },
+      { date: '2025-02-03', value: 71 },
+      { date: '2025-02-20', value: 49 },
+      { date: '2025-03-10', value: 62 }
+    ];
+
+    const aggregatedByMonth = aggregates(plainData, 'byMonth');
+    
+    document.getElementById('aggregation-output').innerHTML = 
+      '<strong>aggregates(plainData, \'byMonth\') result:</strong><br><br>' +
+      JSON.stringify(aggregatedByMonth, null, 2).replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
+
+    // Also create a chart with the aggregated data
+    createBarchart({
+      container: '#chart9',
+      data: plainData,
+      chartType: 'byMonth',
+      renderType: 'high-low',
+      title: 'Aggregated from Plain Data (byMonth)',
+      yAxisLabel: 'Value',
+      width: 500,
+      height: 300
+    });
+  </script>
+</body>
+</html>
