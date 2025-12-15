@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Chart with Shared X-Axis - 700 Data Points</title>
+  <link rel="stylesheet" href="../src/styles.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .chart-section {
+      background: #fff;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .chart-section h2 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      color: #2c3e50;
+      font-size: 18px;
+    }
+
+    .chart-section p {
+      color: #666;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .chart-container {
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    .info-box {
+      background: #e8f4fd;
+      border-left: 4px solid #2196F3;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .info-box strong {
+      color: #1565C0;
+    }
+
+    /* Custom colors for charts */
+    #multiChart1 .barchart-row:nth-child(1) .bar {
+      fill: #4a90d9;
+    }
+
+    #multiChart1 .barchart-row:nth-child(2) .bar.high-low {
+      fill: #e74c3c;
+    }
+
+    #multiChart2 .barchart-row:nth-child(1) .bar {
+      fill: #27ae60;
+    }
+
+    #multiChart2 .barchart-row:nth-child(2) .bar.high-low {
+      fill: #9b59b6;
+    }
+
+    #multiChart2 .barchart-row:nth-child(3) .bar {
+      fill: #f39c12;
+    }
+
+    .code-toggle {
+      background: #ecf0f1;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      margin-top: 15px;
+      color: #555;
+    }
+
+    .code-toggle:hover {
+      background: #dfe6e9;
+    }
+
+    .code-block {
+      display: none;
+      margin-top: 15px;
+      background: #2d3436;
+      border-radius: 4px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .code-block.visible {
+      display: block;
+    }
+
+    .code-block pre {
+      margin: 0;
+      color: #dfe6e9;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .code-block code {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    }
+
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .feature-item {
+      background: #f8f9fa;
+      padding: 12px 16px;
+      border-radius: 4px;
+      border-left: 3px solid #4a90d9;
+    }
+
+    .feature-item strong {
+      color: #2c3e50;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Multi-Chart with Shared X-Axis</h1>
+  <p class="subtitle">Demonstrating 700 data points with horizontal scrolling and sticky y-axes</p>
+
+  <div class="chart-section">
+    <h2>Features Demonstrated</h2>
+    <div class="feature-list">
+      <div class="feature-item">
+        <strong>📊 Multiple Charts</strong><br>
+        Stack different chart types vertically
+      </div>
+      <div class="feature-item">
+        <strong>🔗 Shared X-Axis</strong><br>
+        All charts share synchronized time axis
+      </div>
+      <div class="feature-item">
+        <strong>📌 Sticky Y-Axes</strong><br>
+        Y-axes stay fixed while scrolling
+      </div>
+      <div class="feature-item">
+        <strong>↔️ Horizontal Scroll</strong><br>
+        Scroll to view all 700 data points
+      </div>
+      <div class="feature-item">
+        <strong>🎨 Independent Scales</strong><br>
+        Each chart has its own y-axis scale
+      </div>
+    </div>
+  </div>
+
+  <!-- Example 1: Two Charts (Bar + High-Low) -->
+  <div class="chart-section">
+    <h2>Example 1: Daily Values + Monthly High-Low Range</h2>
+    <p>Two stacked charts sharing the same 700-day dataset. Top chart shows daily values, bottom shows monthly high-low
+      ranges. Scroll horizontally to explore all data - notice how y-axes stay fixed!</p>
+
+    <div class="info-box">
+      <strong>Data:</strong> 700 consecutive days of simulated values (approximately 2 years)
+    </div>
+
+    <div class="chart-container" id="multiChart1"></div>
+
+    <button class="code-toggle" onclick="toggleCode('code1')">Show Code</button>
+    <div class="code-block" id="code1">
+      <pre><code>// Generate 700 days of data
+const data700 = generateDailyData(700);
+
+// Create multi-chart with shared x-axis
+Barchart.createMultiChart({
+  container: '#multiChart1',
+  data: data700,
+  chartType: 'byDay',
+  visibleWidth: 900,
+  chartHeight: 180,
+  barMinWidth: 6,
+  scrollToEnd: true,
+  charts: [
+    {
+      renderType: 'bar',
+      title: 'Daily Values',
+      yAxisLabel: 'Value',
+      barColor: '#4a90d9'
+    },
+    {
+      renderType: 'high-low',
+      title: 'Value Range (same data)',
+      yAxisLabel: 'Range',
+      highLowColor: '#e74c3c',
+      avgMarkerColor: '#fff'
+    }
+  ]
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 2: Three Charts -->
+  <div class="chart-section">
+    <h2>Example 2: Monthly Aggregation - Three Chart Types</h2>
+    <p>Same 700-day dataset aggregated by month, showing three different visualizations. Each chart has its own y-axis
+      scale but shares the same x-axis.</p>
+
+    <div class="info-box">
+      <strong>Aggregation:</strong> Daily data grouped by month → ~24 months of aggregated data
+    </div>
+
+    <div class="chart-container" id="multiChart2"></div>
+
+    <button class="code-toggle" onclick="toggleCode('code2')">Show Code</button>
+    <div class="code-block" id="code2">
+      <pre><code>Barchart.createMultiChart({
+  container: '#multiChart2',
+  data: data700,
+  chartType: 'byMonth',  // Aggregate by month
+  visibleWidth: 900,
+  chartHeight: 150,
+  charts: [
+    {
+      renderType: 'bar',
+      title: 'Monthly Average',
+      yAxisLabel: 'Avg',
+      barColor: '#27ae60'
+    },
+    {
+      renderType: 'high-low',
+      title: 'Monthly Range (High-Low)',
+      yAxisLabel: 'Range',
+      highLowColor: '#9b59b6'
+    },
+    {
+      renderType: 'bar',
+      title: 'Data Point Count per Month',
+      yAxisLabel: 'Count',
+      barColor: '#f39c12'
+    }
+  ]
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 3: Weekly Aggregation -->
+  <div class="chart-section">
+    <h2>Example 3: Weekly Aggregation with Scrolling</h2>
+    <p>700 days aggregated by week (~100 weeks). This example shows significant horizontal scrolling with sticky y-axis
+      behavior.</p>
+
+    <div class="chart-container" id="multiChart3"></div>
+
+    <button class="code-toggle" onclick="toggleCode('code3')">Show Code</button>
+    <div class="code-block" id="code3">
+      <pre><code>Barchart.createMultiChart({
+  container: '#multiChart3',
+  data: data700,
+  chartType: 'byWeek',  // Aggregate by week
+  visibleWidth: 900,
+  chartHeight: 200,
+  barMinWidth: 10,
+  charts: [
+    {
+      renderType: 'high-low',
+      title: 'Weekly Value Range',
+      yAxisLabel: 'Range',
+      highLowColor: '#3498db',
+      avgMarkerColor: '#e74c3c',
+      useThousandSeparator: true,
+      yAxisStartAtZero: false
+    }
+  ]
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Single Chart Example -->
+  <div class="chart-section">
+    <h2>Example 4: Single Chart API (Backward Compatible)</h2>
+    <p>The single chart API still works and now includes horizontal scrolling with sticky y-axis.</p>
+
+    <div class="chart-container" id="singleChart"></div>
+
+    <button class="code-toggle" onclick="toggleCode('code4')">Show Code</button>
+    <div class="code-block" id="code4">
+      <pre><code>// Single chart API (backward compatible)
+Barchart.createBarchart({
+  container: '#singleChart',
+  data: data700,
+  chartType: 'byDay',
+  renderType: 'bar',
+  width: 900,
+  height: 300,
+  title: '700 Days of Data (Single Chart)',
+  yAxisLabel: 'Value',
+  barMinWidth: 5,
+  barColor: '#16a085'
+});</code></pre>
+    </div>
+  </div>
+
+  <script src="../src/barchart.js"></script>
+  <script>
+    // Toggle code visibility
+    function toggleCode(id) {
+      const block = document.getElementById(id);
+      block.classList.toggle('visible');
+    }
+
+    // Generate 700 days of random data
+    function generateDailyData(days) {
+      const data = [];
+      const startDate = new Date('2023-01-01');
+
+      let value = 50;
+      for (let i = 0; i < days; i++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+
+        // Random walk with some seasonality
+        const seasonality = Math.sin((i / 365) * Math.PI * 2) * 15;
+        const trend = i * 0.02;
+        const noise = (Math.random() - 0.5) * 20;
+
+        value = Math.max(10, Math.min(120, value + noise * 0.3));
+
+        data.push({
+          date: date.toISOString().split('T')[0],
+          value: Math.round((value + seasonality + trend) * 10) / 10
+        });
+      }
+
+      return data;
+    }
+
+    // Generate 700 days of data
+    const data700 = generateDailyData(700);
+    console.log(`Generated ${data700.length} data points`);
+
+    // Example 1: Two Charts (Daily Bar + High-Low)
+    Barchart.createMultiChart({
+      container: '#multiChart1',
+      data: data700,
+      chartType: 'byDay',
+      visibleWidth: 900,
+      chartHeight: 180,
+      barMinWidth: 6,
+      scrollToEnd: true,
+      charts: [
+        {
+          renderType: 'bar',
+          title: 'Daily Values',
+          yAxisLabel: 'Value',
+          barColor: '#4a90d9'
+        },
+        {
+          renderType: 'high-low',
+          title: 'Value Range (same data as bars above)',
+          yAxisLabel: 'Range',
+          highLowColor: '#e74c3c',
+          avgMarkerColor: '#fff'
+        }
+      ]
+    });
+
+    // Example 2: Three Charts with Monthly Aggregation
+    Barchart.createMultiChart({
+      container: '#multiChart2',
+      data: data700,
+      chartType: 'byMonth',
+      visibleWidth: 900,
+      chartHeight: 150,
+      charts: [
+        {
+          renderType: 'bar',
+          title: 'Monthly Average',
+          yAxisLabel: 'Avg',
+          barColor: '#27ae60'
+        },
+        {
+          renderType: 'high-low',
+          title: 'Monthly Range (High-Low with Avg marker)',
+          yAxisLabel: 'Range',
+          highLowColor: '#9b59b6',
+          avgMarkerColor: '#fff'
+        },
+        {
+          renderType: 'bar',
+          title: 'Data Points per Month',
+          yAxisLabel: 'Count',
+          barColor: '#f39c12'
+        }
+      ]
+    });
+
+    // Example 3: Weekly High-Low
+    Barchart.createMultiChart({
+      container: '#multiChart3',
+      data: data700,
+      chartType: 'byWeek',
+      visibleWidth: 900,
+      chartHeight: 200,
+      barMinWidth: 10,
+      charts: [
+        {
+          renderType: 'high-low',
+          title: 'Weekly Value Range (~100 weeks)',
+          yAxisLabel: 'Range',
+          highLowColor: '#3498db',
+          avgMarkerColor: '#e74c3c',
+          useThousandSeparator: true,
+          yAxisStartAtZero: false
+        }
+      ]
+    });
+
+    // Example 4: Single Chart API
+    Barchart.createBarchart({
+      container: '#singleChart',
+      data: data700,
+      chartType: 'byDay',
+      renderType: 'bar',
+      width: 900,
+      height: 300,
+      title: '700 Days of Data (Single Chart API)',
+      yAxisLabel: 'Value',
+      barMinWidth: 5,
+      barColor: '#16a085'
+    });
+  </script>
+</body>
+
+</html>

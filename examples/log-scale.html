@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logarithmic Scale &amp; Number Formatting - Barchart Demo</title>
+  <link rel="stylesheet" href="../src/styles.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .chart-section {
+      background: #fff;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .chart-section h2 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      color: #2c3e50;
+      font-size: 18px;
+    }
+
+    .chart-section p {
+      color: #666;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .chart-container {
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    .info-box {
+      background: #e8f4fd;
+      border-left: 4px solid #2196F3;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .info-box strong {
+      color: #1565C0;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .code-toggle {
+      background: #ecf0f1;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      margin-top: 15px;
+      color: #555;
+    }
+
+    .code-toggle:hover {
+      background: #dfe6e9;
+    }
+
+    .code-block {
+      display: none;
+      margin-top: 15px;
+      background: #2d3436;
+      border-radius: 4px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .code-block.visible {
+      display: block;
+    }
+
+    .code-block pre {
+      margin: 0;
+      color: #dfe6e9;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .code-block code {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>Logarithmic Scale &amp; Number Formatting</h1>
+  <p class="subtitle">Visualizing large numbers with log10 scale and K/M/B formatting</p>
+
+  <!-- Example 1: Linear vs Log Scale Comparison -->
+  <div class="chart-section">
+    <h2>Example 1: Linear vs Logarithmic Scale Comparison</h2>
+    <p>The same data shown with linear scale (left) and log10 scale (right). Notice how the log scale makes smaller values visible when there's a huge range.</p>
+    
+    <div class="info-box">
+      <strong>Data Range:</strong> Values from 100 to 5 billion - a 50 million times difference!
+    </div>
+    
+    <div class="comparison-grid">
+      <div>
+        <h3 style="font-size: 14px; color: #666; margin-bottom: 10px;">Linear Scale (default)</h3>
+        <div class="chart-container" id="linearChart"></div>
+      </div>
+      <div>
+        <h3 style="font-size: 14px; color: #666; margin-bottom: 10px;">Log10 Scale</h3>
+        <div class="chart-container" id="logChart"></div>
+      </div>
+    </div>
+    
+    <button class="code-toggle" onclick="toggleCode('code1')">Show Code</button>
+    <div class="code-block" id="code1">
+      <pre><code>// Large range data (100 to 5 billion)
+const largeRangeData = [
+  { date: '2024-01-01', value: 100 },
+  { date: '2024-02-01', value: 1500 },
+  { date: '2024-03-01', value: 25000 },
+  { date: '2024-04-01', value: 500000 },
+  { date: '2024-05-01', value: 8000000 },
+  { date: '2024-06-01', value: 150000000 },
+  { date: '2024-07-01', value: 2500000000 },
+  { date: '2024-08-01', value: 5000000000 }
+];
+
+// Linear scale (default)
+Barchart.createBarchart({
+  container: '#linearChart',
+  data: largeRangeData,
+  chartType: 'byMonth',
+  yAxisScale: 'linear',    // Default
+  yAxisFormat: 'auto',     // Auto-format (K, M, B)
+  title: 'Linear Scale',
+  yAxisLabel: 'Value'
+});
+
+// Log10 scale
+Barchart.createBarchart({
+  container: '#logChart',
+  data: largeRangeData,
+  chartType: 'byMonth',
+  yAxisScale: 'log10',     // Logarithmic scale
+  yAxisFormat: 'auto',     // Auto-format (K, M, B)
+  title: 'Log10 Scale',
+  yAxisLabel: 'Value'
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 2: Number Formatting Options -->
+  <div class="chart-section">
+    <h2>Example 2: Number Formatting Options</h2>
+    <p>Different formatting options for y-axis labels: Auto (smart), forced K (thousands), forced M (millions), and no formatting.</p>
+    
+    <div class="comparison-grid">
+      <div>
+        <h3 style="font-size: 14px; color: #666; margin-bottom: 10px;">Auto Format (smart switching)</h3>
+        <div class="chart-container" id="formatAuto"></div>
+      </div>
+      <div>
+        <h3 style="font-size: 14px; color: #666; margin-bottom: 10px;">Forced Millions (M)</h3>
+        <div class="chart-container" id="formatM"></div>
+      </div>
+    </div>
+    
+    <button class="code-toggle" onclick="toggleCode('code2')">Show Code</button>
+    <div class="code-block" id="code2">
+      <pre><code>// Million-scale data
+const millionData = [
+  { date: '2024-01-01', value: 1200000 },
+  { date: '2024-02-01', value: 2500000 },
+  { date: '2024-03-01', value: 1800000 },
+  { date: '2024-04-01', value: 4200000 },
+  { date: '2024-05-01', value: 3100000 },
+  { date: '2024-06-01', value: 5800000 }
+];
+
+// Auto format
+Barchart.createBarchart({
+  container: '#formatAuto',
+  data: millionData,
+  chartType: 'byMonth',
+  yAxisFormat: 'auto',     // Shows as M automatically
+  title: 'Revenue (Auto)',
+  yAxisLabel: 'USD'
+});
+
+// Forced M format
+Barchart.createBarchart({
+  container: '#formatM',
+  data: millionData,
+  chartType: 'byMonth',
+  yAxisFormat: 'M',        // Always show as millions
+  yAxisDecimals: 1,        // 1 decimal place
+  title: 'Revenue (Millions)',
+  yAxisLabel: 'USD (M)'
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 3: Multi-Chart with Log Scale -->
+  <div class="chart-section">
+    <h2>Example 3: Multi-Chart with Mixed Scales</h2>
+    <p>Multiple charts can have different scales. Top chart uses linear scale for normal data, bottom uses log10 for exponential growth data.</p>
+    
+    <div class="chart-container" id="multiScaleChart"></div>
+    
+    <button class="code-toggle" onclick="toggleCode('code3')">Show Code</button>
+    <div class="code-block" id="code3">
+      <pre><code>Barchart.createMultiChart({
+  container: '#multiScaleChart',
+  data: exponentialData,
+  chartType: 'byMonth',
+  visibleWidth: 800,
+  chartHeight: 150,
+  charts: [
+    {
+      renderType: 'bar',
+      title: 'User Growth (Linear)',
+      yAxisLabel: 'Users',
+      yAxisScale: 'linear',
+      yAxisFormat: 'K',
+      barColor: '#27ae60'
+    },
+    {
+      renderType: 'bar',
+      title: 'Revenue Growth (Log10)',
+      yAxisLabel: 'Revenue',
+      yAxisScale: 'log10',
+      yAxisFormat: 'auto',
+      barColor: '#e74c3c'
+    }
+  ]
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 4: Billions with Custom Decimals -->
+  <div class="chart-section">
+    <h2>Example 4: Billions with Custom Decimal Places</h2>
+    <p>Showing very large numbers (billions) with configurable decimal precision.</p>
+    
+    <div class="chart-container" id="billionsChart"></div>
+    
+    <button class="code-toggle" onclick="toggleCode('code4')">Show Code</button>
+    <div class="code-block" id="code4">
+      <pre><code>const billionData = [
+  { date: '2024-01-01', value: 1200000000 },
+  { date: '2024-02-01', value: 2350000000 },
+  { date: '2024-03-01', value: 1890000000 },
+  { date: '2024-04-01', value: 3120000000 },
+  { date: '2024-05-01', value: 2780000000 },
+  { date: '2024-06-01', value: 4150000000 }
+];
+
+Barchart.createBarchart({
+  container: '#billionsChart',
+  data: billionData,
+  chartType: 'byMonth',
+  yAxisFormat: 'B',        // Force billions
+  yAxisDecimals: 2,        // 2 decimal places (e.g., "1.20B")
+  title: 'Global Market Cap',
+  yAxisLabel: 'USD (B)',
+  barColor: '#9b59b6'
+});</code></pre>
+    </div>
+  </div>
+
+  <script src="../src/barchart.js"></script>
+  <script>
+    // Toggle code visibility
+    function toggleCode(id) {
+      const block = document.getElementById(id);
+      block.classList.toggle('visible');
+    }
+
+    // Example 1: Large range data for linear vs log comparison
+    const largeRangeData = [
+      { date: '2024-01-01', value: 100 },
+      { date: '2024-02-01', value: 1500 },
+      { date: '2024-03-01', value: 25000 },
+      { date: '2024-04-01', value: 500000 },
+      { date: '2024-05-01', value: 8000000 },
+      { date: '2024-06-01', value: 150000000 },
+      { date: '2024-07-01', value: 2500000000 },
+      { date: '2024-08-01', value: 5000000000 }
+    ];
+
+    // Linear scale chart
+    Barchart.createBarchart({
+      container: '#linearChart',
+      data: largeRangeData,
+      chartType: 'byMonth',
+      width: 400,
+      height: 250,
+      yAxisScale: 'linear',
+      yAxisFormat: 'auto',
+      title: 'Linear Scale',
+      yAxisLabel: 'Value',
+      barColor: '#3498db'
+    });
+
+    // Log10 scale chart
+    Barchart.createBarchart({
+      container: '#logChart',
+      data: largeRangeData,
+      chartType: 'byMonth',
+      width: 400,
+      height: 250,
+      yAxisScale: 'log10',
+      yAxisFormat: 'auto',
+      title: 'Log10 Scale',
+      yAxisLabel: 'Value',
+      barColor: '#e74c3c'
+    });
+
+    // Example 2: Number formatting options
+    const millionData = [
+      { date: '2024-01-01', value: 1200000 },
+      { date: '2024-02-01', value: 2500000 },
+      { date: '2024-03-01', value: 1800000 },
+      { date: '2024-04-01', value: 4200000 },
+      { date: '2024-05-01', value: 3100000 },
+      { date: '2024-06-01', value: 5800000 }
+    ];
+
+    Barchart.createBarchart({
+      container: '#formatAuto',
+      data: millionData,
+      chartType: 'byMonth',
+      width: 400,
+      height: 250,
+      yAxisFormat: 'auto',
+      title: 'Revenue (Auto)',
+      yAxisLabel: 'USD',
+      barColor: '#27ae60'
+    });
+
+    Barchart.createBarchart({
+      container: '#formatM',
+      data: millionData,
+      chartType: 'byMonth',
+      width: 400,
+      height: 250,
+      yAxisFormat: 'M',
+      yAxisDecimals: 1,
+      title: 'Revenue (Millions)',
+      yAxisLabel: 'USD (M)',
+      barColor: '#f39c12'
+    });
+
+    // Example 3: Multi-chart with mixed scales
+    const exponentialData = [];
+    let userValue = 1000;
+    let revenueValue = 100;
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(2024, i, 1);
+      userValue = userValue * 1.15 + Math.random() * 500;
+      revenueValue = revenueValue * 1.8 + Math.random() * 50;
+      exponentialData.push({
+        date: date.toISOString().split('T')[0],
+        value: Math.round(userValue),
+        revenueValue: Math.round(revenueValue)
+      });
+    }
+
+    Barchart.createMultiChart({
+      container: '#multiScaleChart',
+      data: exponentialData,
+      chartType: 'byMonth',
+      visibleWidth: 800,
+      chartHeight: 150,
+      charts: [
+        {
+          renderType: 'bar',
+          title: 'User Growth (Linear Scale)',
+          yAxisLabel: 'Users',
+          yAxisScale: 'linear',
+          yAxisFormat: 'K',
+          barColor: '#27ae60'
+        },
+        {
+          renderType: 'bar',
+          title: 'Revenue Growth (Log10 Scale)',
+          yAxisLabel: 'Revenue',
+          yAxisScale: 'log10',
+          yAxisFormat: 'auto',
+          barColor: '#e74c3c'
+        }
+      ]
+    });
+
+    // Example 4: Billions with custom decimals
+    const billionData = [
+      { date: '2024-01-01', value: 1200000000 },
+      { date: '2024-02-01', value: 2350000000 },
+      { date: '2024-03-01', value: 1890000000 },
+      { date: '2024-04-01', value: 3120000000 },
+      { date: '2024-05-01', value: 2780000000 },
+      { date: '2024-06-01', value: 4150000000 }
+    ];
+
+    Barchart.createBarchart({
+      container: '#billionsChart',
+      data: billionData,
+      chartType: 'byMonth',
+      width: 800,
+      height: 280,
+      yAxisFormat: 'B',
+      yAxisDecimals: 2,
+      title: 'Global Market Cap',
+      yAxisLabel: 'USD (B)',
+      barColor: '#9b59b6'
+    });
+  </script>
+</body>
+</html>

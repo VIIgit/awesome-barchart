@@ -5,10 +5,13 @@ A modern, mode-driven JavaScript library for creating interactive bar charts wit
 ## Features
 
 - **Multiple Chart Types**: Daily, Weekly, Monthly, Weekday, and Yearly aggregation
+- **Multi-Chart with Shared X-Axis**: Stack multiple charts vertically, each with its own y-axis
+- **Horizontal Scrolling**: Automatically scroll when data exceeds visible width
+- **Sticky Y-Axis**: Y-axes stay fixed while scrolling, with subtle drop shadow
 - **Render Types**: Standard bars and High-Low range visualization
 - **Automatic Data Aggregation**: Converts daily data into grouped summaries
 - **Interactive Tooltips**: Hover to see data details
-- **Responsive Design**: Works on all screen sizes
+- **Modular JavaScript**: UMD module pattern, no global namespace pollution
 - **Pure JavaScript**: No dependencies required
 - **Easy Customization**: CSS-based styling
 
@@ -21,7 +24,7 @@ A modern, mode-driven JavaScript library for creating interactive bar charts wit
 <script src="src/barchart.js"></script>
 ```
 
-### 2. Create a Chart
+### 2. Create a Single Chart
 
 ```html
 <div id="myChart"></div>
@@ -33,7 +36,7 @@ const data = [
   { date: '2025-01-03', value: 35 }
 ];
 
-createBarchart({
+Barchart.createBarchart({
   container: '#myChart',
   data: data,
   chartType: 'byDay',
@@ -43,29 +46,97 @@ createBarchart({
 </script>
 ```
 
-## Configuration Options
+### 3. Create Multiple Charts with Shared X-Axis
+
+```html
+<div id="multiChart"></div>
+
+<script>
+Barchart.createMultiChart({
+  container: '#multiChart',
+  data: data,
+  chartType: 'byDay',
+  visibleWidth: 900,
+  chartHeight: 180,
+  charts: [
+    {
+      renderType: 'bar',
+      title: 'Daily Values',
+      yAxisLabel: 'Value',
+      barColor: '#4a90d9'
+    },
+    {
+      renderType: 'high-low',
+      title: 'Value Range',
+      yAxisLabel: 'Range',
+      highLowColor: '#e74c3c'
+    }
+  ]
+});
+</script>
+```
+
+## API Reference
+
+### `Barchart.createBarchart(config)`
+
+Create a single chart.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `container` | string/element | null | CSS selector or DOM element |
 | `data` | array | [] | Array of data objects |
-| `chartType` | string | 'byDay' | Grouping mode: 'byDay', 'byWeek', 'byMonth', 'byWeekday', 'byYear' |
-| `renderType` | string | 'bar' | Render mode: 'bar' or 'high-low' |
-| `width` | number | 800 | Chart width in pixels |
+| `chartType` | string | 'byDay' | Grouping: 'byDay', 'byWeek', 'byMonth', 'byWeekday', 'byYear' |
+| `renderType` | string | 'bar' | 'bar' or 'high-low' |
+| `width` | number | 800 | Visible width in pixels |
 | `height` | number | 400 | Chart height in pixels |
-| `margin` | object | {top: 40, right: 30, bottom: 60, left: 60} | Chart margins |
+| `margin` | object | {...} | Chart margins |
 | `barColor` | string | '#4a90d9' | Bar fill color |
 | `highLowColor` | string | '#2c5aa0' | High-low bar color |
 | `avgMarkerColor` | string | '#ff6b6b' | Average marker color |
+| `barMinWidth` | number | 8 | Minimum bar width (enables scrolling) |
 | `showTooltip` | boolean | true | Show tooltips on hover |
 | `showGrid` | boolean | true | Show grid lines |
 | `title` | string | '' | Chart title |
 | `yAxisLabel` | string | '' | Y-axis label |
-| `xAxisLabel` | string | '' | X-axis label |
+
+### `Barchart.createMultiChart(config)`
+
+Create multiple charts with a shared x-axis.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `container` | string/element | null | CSS selector or DOM element |
+| `data` | array | [] | Array of data objects (shared by all charts) |
+| `charts` | array | [] | Array of chart configurations |
+| `chartType` | string | 'byDay' | Shared x-axis grouping |
+| `visibleWidth` | number | 800 | Visible width (scrolls if content exceeds) |
+| `chartHeight` | number | 200 | Height per chart |
+| `margin` | object | {...} | Shared margins |
+| `barMinWidth` | number | 8 | Minimum bar width |
+| `showTooltip` | boolean | true | Show tooltips |
+| `showGrid` | boolean | true | Show grid lines |
+
+Each chart in the `charts` array can have:
+- `renderType`: 'bar' or 'high-low'
+- `title`: Chart title
+- `yAxisLabel`: Y-axis label
+- `barColor`: Bar color (for 'bar' type)
+- `highLowColor`: Range bar color (for 'high-low' type)
+- `avgMarkerColor`: Average marker color
+
+### `Barchart.aggregates(data, mode)`
+
+Aggregate plain data by the specified mode.
+
+```js
+const aggregated = Barchart.aggregates(data, 'byMonth');
+// Returns: [{ date: '2025-01', value: avg, highValue: max, lowValue: min, count: n }, ...]
+```
 
 ## Data Format
 
-### Basic Data (for bar charts)
+### Basic Data
 
 ```js
 const data = [
@@ -86,94 +157,104 @@ const data = [
 
 ## Chart Types
 
-### byDay
-Individual daily bars, no aggregation.
-
-### byWeek
-Data aggregated by ISO week number. Multi-level axis shows year and week.
-
-### byMonth
-Data aggregated by month. Shows month names with year labels.
-
-### byWeekday
-Average values by day of week (Sun-Sat). Great for spotting weekly patterns.
-
-### byYear
-Data aggregated by year.
+| Type | Description |
+|------|-------------|
+| `byDay` | Individual daily bars, no aggregation |
+| `byWeek` | Aggregated by ISO week number |
+| `byMonth` | Aggregated by month |
+| `byWeekday` | Averaged by day of week (Sun-Sat) |
+| `byYear` | Aggregated by year |
 
 ## Render Types
 
-### bar (default)
-Standard bar chart showing values.
+| Type | Description |
+|------|-------------|
+| `bar` | Standard bar chart |
+| `high-low` | Range visualization with high, low, and average marker |
 
-### high-low
-Range visualization showing:
-- **Bar**: Extends from low to high value
-- **Marker**: Indicates average value
+## Horizontal Scrolling
 
-## Data Aggregation Utility
+When data exceeds the visible width, the chart automatically enables horizontal scrolling:
 
-Use the `aggregates()` function to convert plain data into grouped format:
+- **Y-axes remain sticky** (fixed) while scrolling
+- **Subtle drop shadow** separates axes from scrolling content
+- **Synchronized scrolling** across all charts in multi-chart mode
+- **Scrollbar** appears at the bottom
 
-```js
-const plainData = [
-  { date: '2025-01-01', value: 42 },
-  { date: '2025-01-02', value: 58 },
-  { date: '2025-01-15', value: 35 }
-];
-
-const aggregatedByMonth = aggregates(plainData, 'byMonth');
-// Result:
-// [
-//   { date: '2025-01', value: 45, highValue: 58, lowValue: 35, count: 3 }
-// ]
-```
-
-### Function Signature
+Configure scrolling behavior with `barMinWidth`:
 
 ```js
-function aggregates(data, mode)
+Barchart.createBarchart({
+  // ...
+  width: 800,          // Visible width
+  barMinWidth: 6,      // Minimum pixels per bar
+  // If data has 700 points and barMinWidth=6, content width = 700*6 = 4200px
+  // This exceeds 800px, so scrolling is enabled
+});
 ```
 
-- `data`: Array of `{date, value}` objects
-- `mode`: One of 'byDay', 'byWeek', 'byMonth', 'byWeekday', 'byYear'
-- Returns: Array of `{date, value, highValue, lowValue, count}`
+## Y-Axis and Advanced Options
+
+| Option                | Type      | Default      | Description |
+|-----------------------|-----------|--------------|-------------|
+| `yAxisScale`          | string    | `'linear'`   | `'linear'` or `'log10'` for y-axis scaling |
+| `yAxisFormat`         | string    | `'auto'`     | `'auto'`, `'K'`, `'M'`, `'B'`, `'none'` (number formatting) |
+| `yAxisDecimals`       | number    | `2`          | Number of decimals for y-axis labels |
+| `useThousandSeparator`| boolean   | `true`       | Use thousand separators in y-axis labels |
+| `yAxisStartAtZero`    | boolean   | `true`       | If true, y-axis starts at 0; if false, starts at min data value |
+| `tooltipFormatter`    | function  | `null`       | Custom tooltip HTML formatter `(data, config) => string` |
+
+### Example: Log10 Scale and Custom Y-Axis
+
+```js
+Barchart.createBarchart({
+  container: '#logChart',
+  data: myData,
+  yAxisScale: 'log10',
+  yAxisLabel: 'Logarithmic',
+  yAxisFormat: 'auto',
+  yAxisDecimals: 0,
+  yAxisStartAtZero: false,
+  showGrid: true
+});
+```
+
+### Multi-Chart Example with Per-Chart Options
+
+```js
+Barchart.createMultiChart({
+  container: '#multi',
+  data: myData,
+  charts: [
+    { renderType: 'bar', yAxisLabel: 'A', yAxisStartAtZero: true },
+    { renderType: 'high-low', yAxisLabel: 'B', yAxisScale: 'log10', yAxisStartAtZero: false }
+  ],
+  chartType: 'byWeek',
+  visibleWidth: 1000,
+  chartHeight: 200
+});
+```
+
+---
 
 ## Examples
 
-See `examples/index.html` for interactive examples of all chart types.
+- `examples/index.html` - Basic examples of all chart types
+- `examples/multi-chart.html` - Multi-chart with 700 data points
 
 ## File Structure
 
 ```
 barchart2/
 ├── src/
-│   ├── barchart.js    # Core library
+│   ├── barchart.js    # Core library (UMD module)
 │   └── styles.css     # Base styles
 ├── examples/
-│   ├── index.html     # Interactive examples
+│   ├── index.html     # Basic examples
+│   ├── multi-chart.html # Multi-chart example with 700 data points
 │   └── styles.css     # Example-specific styles
 ├── README.md          # This file
 └── .cursorrules       # AI agent guidance
-```
-
-## Customization
-
-### CSS Styling
-
-Override default styles in your CSS:
-
-```css
-/* Custom bar color */
-#myChart .bar {
-  fill: #27ae60;
-}
-
-/* Custom tooltip */
-.chart-tooltip {
-  background: rgba(0, 0, 0, 0.9);
-  border-radius: 8px;
-}
 ```
 
 ## Browser Support

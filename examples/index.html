@@ -60,17 +60,20 @@ createBarchart({
 
   <!-- Example 3: Weekly Bar Chart -->
   <div class="chart-section">
-    <h2>3. Weekly Aggregated Bar Chart (byWeek)</h2>
-    <p>Data is aggregated by week. Shows week numbers with year labels.</p>
+    <h2>3. Weekly Bar Chart with Year + Quarter Labels (byWeek)</h2>
+    <p>Data aggregated by week. Shows week numbers on first row (thinned for space) and year + quarter on the second row. Quarter boundaries are marked for clarity.</p>
     <div class="chart-container" id="chart3"></div>
     <button class="code-toggle" onclick="toggleCode('code3')">Show Code</button>
     <div class="code-block" id="code3">
-      <pre><code>createBarchart({
+      <pre><code>// Generate a full year of data for all 4 quarters
+const fullYearData = generateYearData(2024);
+
+createBarchart({
   container: '#chart3',
-  data: quarterData,
+  data: fullYearData,
   chartType: 'byWeek',
   renderType: 'bar',
-  title: 'Weekly Averages Q1 2025',
+  title: 'Weekly Averages 2024 - With Quarter Labels',
   yAxisLabel: 'Average Value'
 });</code></pre>
     </div>
@@ -322,8 +325,8 @@ console.log('Aggregated data:', aggregatedByMonth);</code></pre>
       { date: '2025-01-21', value: 163.50 }
     ];
 
-    // Example 1: Daily Bar Chart
-    createBarchart({
+    // Example 1: Daily Bar Chart with Custom Tooltip
+    Barchart.createBarchart({
       container: '#chart1',
       data: dailyData,
       chartType: 'byDay',
@@ -331,11 +334,15 @@ console.log('Aggregated data:', aggregatedByMonth);</code></pre>
       title: 'Daily Values - January 2025',
       yAxisLabel: 'Value',
       width: 750,
-      height: 350
+      height: 350,
+      // Custom tooltip formatter example
+      tooltipFormatter: (data, config) => {
+        return `<strong>📊 Daily Requests</strong><br>Date: ${data.date}<br>Requests: ${data.value}`;
+      }
     });
 
     // Example 2: Monthly Bar Chart
-    createBarchart({
+    Barchart.createBarchart({
       container: '#chart2',
       data: yearData,
       chartType: 'byMonth',
@@ -346,20 +353,20 @@ console.log('Aggregated data:', aggregatedByMonth);</code></pre>
       height: 350
     });
 
-    // Example 3: Weekly Bar Chart
-    createBarchart({
+    // Example 3: Weekly Bar Chart with Full Year (demonstrates quarter labels)
+    Barchart.createBarchart({
       container: '#chart3',
-      data: quarterData,
+      data: yearData,  // Full year of data to show all 4 quarters
       chartType: 'byWeek',
       renderType: 'bar',
-      title: 'Weekly Averages Q1 2025',
+      title: 'Weekly Averages 2024 - With Quarter Labels',
       yAxisLabel: 'Average Value',
-      width: 800,
+      width: 1000,
       height: 350
     });
 
     // Example 4: Weekday Bar Chart
-    createBarchart({
+    Barchart.createBarchart({
       container: '#chart4',
       data: monthData,
       chartType: 'byWeekday',
@@ -371,7 +378,7 @@ console.log('Aggregated data:', aggregatedByMonth);</code></pre>
     });
 
     // Example 5: Yearly Bar Chart
-    createBarchart({
+    Barchart.createBarchart({
       container: '#chart5',
       data: multiYearData,
       chartType: 'byYear',
@@ -383,7 +390,7 @@ console.log('Aggregated data:', aggregatedByMonth);</code></pre>
     });
 
     // Example 6: Monthly High-Low Chart
-    createBarchart({
+    Barchart.createBarchart({
       container: '#chart6',
       data: yearData,
       chartType: 'byMonth',
@@ -395,7 +402,7 @@ console.log('Aggregated data:', aggregatedByMonth);</code></pre>
     });
 
     // Example 7: Daily High-Low (Temperature)
-    createBarchart({
+    Barchart.createBarchart({
       container: '#chart7',
       data: temperatureData,
       chartType: 'byDay',
@@ -407,7 +414,7 @@ console.log('Aggregated data:', aggregatedByMonth);</code></pre>
     });
 
     // Example 8: Weekly High-Low (Stock)
-    createBarchart({
+    Barchart.createBarchart({
       container: '#chart8',
       data: stockData,
       chartType: 'byWeek',
@@ -428,14 +435,14 @@ console.log('Aggregated data:', aggregatedByMonth);</code></pre>
       { date: '2025-03-10', value: 62 }
     ];
 
-    const aggregatedByMonth = aggregates(plainData, 'byMonth');
+    const aggregatedByMonth = Barchart.aggregates(plainData, 'byMonth');
     
     document.getElementById('aggregation-output').innerHTML = 
-      '<strong>aggregates(plainData, \'byMonth\') result:</strong><br><br>' +
+      '<strong>Barchart.aggregates(plainData, \'byMonth\') result:</strong><br><br>' +
       JSON.stringify(aggregatedByMonth, null, 2).replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
 
     // Also create a chart with the aggregated data
-    createBarchart({
+    Barchart.createBarchart({
       container: '#chart9',
       data: plainData,
       chartType: 'byMonth',
