@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Per-Chart Data Sets - Multi-Chart Example</title>
+  <link rel="stylesheet" href="../src/styles.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .chart-section {
+      background: #fff;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .chart-section h2 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      color: #2c3e50;
+      font-size: 18px;
+    }
+
+    .chart-section p {
+      color: #666;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .chart-container {
+      overflow: hidden;
+      border-radius: 4px;
+    }
+
+    .info-box {
+      background: #e8f4fd;
+      border-left: 4px solid #2196F3;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .info-box strong {
+      color: #1565C0;
+    }
+
+    .info-box.success {
+      background: #e8f5e9;
+      border-left-color: #4caf50;
+    }
+
+    .info-box.success strong {
+      color: #2e7d32;
+    }
+
+    .code-toggle {
+      background: #ecf0f1;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      margin-top: 15px;
+      color: #555;
+    }
+
+    .code-toggle:hover {
+      background: #dfe6e9;
+    }
+
+    .code-block {
+      display: none;
+      margin-top: 15px;
+      background: #2d3436;
+      border-radius: 4px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .code-block.visible {
+      display: block;
+    }
+
+    .code-block pre {
+      margin: 0;
+      color: #dfe6e9;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .code-block code {
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    }
+
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .feature-item {
+      background: #f8f9fa;
+      padding: 12px 16px;
+      border-radius: 4px;
+      border-left: 3px solid #4a90d9;
+    }
+
+    .feature-item strong {
+      color: #2c3e50;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Per-Chart Data Sets</h1>
+  <p class="subtitle">Each chart can have its own data array while sharing the same x-axis</p>
+
+  <div class="chart-section">
+    <h2>New Feature: Per-Chart Data</h2>
+    <div class="feature-list">
+      <div class="feature-item">
+        <strong>📊 Independent Data Sets</strong><br>
+        Each chart specifies its own <code>data</code> array
+      </div>
+      <div class="feature-item">
+        <strong>🔗 Shared X-Axis</strong><br>
+        All charts must have same number of records, aligned by date
+      </div>
+      <div class="feature-item">
+        <strong>📈 Different Values</strong><br>
+        Each chart displays its own values independently
+      </div>
+      <div class="feature-item">
+        <strong>🎯 Mixed Render Types</strong><br>
+        Combine bar charts with high-low charts
+      </div>
+    </div>
+    <div class="info-box success">
+      <strong>Note:</strong> Data arrays must be aligned by x-axis key (e.g., date) and have the same length/order.
+    </div>
+  </div>
+
+  <!-- Example 1: Two Different Datasets -->
+  <div class="chart-section">
+    <h2>Example 1: Revenue vs Orders (Different Data Sets)</h2>
+    <p>Two charts showing different metrics for the same time period. Top chart shows daily revenue, bottom chart shows order count - each with its own data array.</p>
+
+    <div class="info-box">
+      <strong>Data:</strong> 365 days of simulated e-commerce data with different scales for each metric
+    </div>
+
+    <div class="chart-container" id="multiChart1"></div>
+
+    <button class="code-toggle" onclick="toggleCode('code1')">Show Code</button>
+    <div class="code-block" id="code1">
+      <pre><code>// Generate two different datasets for the same dates
+const revenueData = generateRevenueData(365);
+const ordersData = generateOrdersData(365);
+
+// Create multi-chart with per-chart data
+Barchart.createMultiChart({
+  container: '#multiChart1',
+  // No shared data - each chart has its own
+  chartType: 'byDay',
+  visibleWidth: 900,
+  chartHeight: 180,
+  barMinWidth: 6,
+  scrollToEnd: true,
+  charts: [
+    {
+      data: revenueData,  // First dataset
+      renderType: 'bar',
+      title: 'Daily Revenue ($)',
+      yAxisLabel: 'Revenue',
+      barColor: '#4a90d9',
+      yAxisFormat: 'K'
+    },
+    {
+      data: ordersData,   // Second dataset
+      renderType: 'bar',
+      title: 'Daily Orders',
+      yAxisLabel: 'Orders',
+      barColor: '#27ae60'
+    }
+  ]
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 2: Temperature High-Low with Humidity -->
+  <div class="chart-section">
+    <h2>Example 2: Weather Data - Temperature vs Humidity</h2>
+    <p>Weather dashboard showing temperature range (high-low chart) and humidity percentage (bar chart) - completely different metrics from different data sources.</p>
+
+    <div class="chart-container" id="multiChart2"></div>
+
+    <button class="code-toggle" onclick="toggleCode('code2')">Show Code</button>
+    <div class="code-block" id="code2">
+      <pre><code>// Two different weather metrics
+const temperatureData = generateTemperatureData(180);
+const humidityData = generateHumidityData(180);
+
+Barchart.createMultiChart({
+  container: '#multiChart2',
+  chartType: 'byDay',
+  visibleWidth: 900,
+  chartHeight: 160,
+  barMinWidth: 8,
+  scrollToEnd: true,
+  charts: [
+    {
+      data: temperatureData,
+      renderType: 'high-low',
+      title: 'Temperature Range (°F)',
+      yAxisLabel: 'Temp',
+      highLowColor: '#e74c3c',
+      avgMarkerColor: '#fff',
+      yAxisStartAtZero: false
+    },
+    {
+      data: humidityData,
+      renderType: 'bar',
+      title: 'Humidity (%)',
+      yAxisLabel: '%',
+      barColor: '#3498db'
+    }
+  ]
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 3: Stock Data - Price, Volume, RSI -->
+  <div class="chart-section">
+    <h2>Example 3: Stock Analysis - Price, Volume & RSI</h2>
+    <p>Financial dashboard with three different metrics: stock price (high-low), trading volume (bars), and RSI indicator (bars) - each from its own data source.</p>
+
+    <div class="chart-container" id="multiChart3"></div>
+
+    <button class="code-toggle" onclick="toggleCode('code3')">Show Code</button>
+    <div class="code-block" id="code3">
+      <pre><code>// Three different stock metrics
+const priceData = generateStockPriceData(200);
+const volumeData = generateVolumeData(200);
+const rsiData = generateRSIData(200);
+
+Barchart.createMultiChart({
+  container: '#multiChart3',
+  chartType: 'byDay',
+  visibleWidth: 900,
+  chartHeight: 140,
+  barMinWidth: 6,
+  scrollToEnd: true,
+  charts: [
+    {
+      data: priceData,
+      renderType: 'high-low',
+      title: 'Stock Price (High-Low)',
+      yAxisLabel: 'Price',
+      highLowColor: '#2c3e50',
+      avgMarkerColor: '#f39c12',
+      yAxisStartAtZero: false
+    },
+    {
+      data: volumeData,
+      renderType: 'bar',
+      title: 'Trading Volume',
+      yAxisLabel: 'Vol',
+      barColor: '#9b59b6',
+      yAxisFormat: 'M'
+    },
+    {
+      data: rsiData,
+      renderType: 'bar',
+      title: 'RSI Indicator',
+      yAxisLabel: 'RSI',
+      barColor: '#16a085'
+    }
+  ]
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 4: Mixed - Some charts share data, some have own -->
+  <div class="chart-section">
+    <h2>Example 4: Backward Compatible - Shared + Per-Chart Data</h2>
+    <p>Charts can mix shared data (from config.data) with per-chart data. The first chart uses shared data, the second provides its own.</p>
+
+    <div class="chart-container" id="multiChart4"></div>
+
+    <button class="code-toggle" onclick="toggleCode('code4')">Show Code</button>
+    <div class="code-block" id="code4">
+      <pre><code>// Shared data for charts that don't specify their own
+const sharedData = generateDailyData(100);
+// Custom data for one specific chart
+const customData = generateCustomData(100);
+
+Barchart.createMultiChart({
+  container: '#multiChart4',
+  data: sharedData,  // Shared data as fallback
+  chartType: 'byDay',
+  visibleWidth: 900,
+  chartHeight: 150,
+  barMinWidth: 10,
+  charts: [
+    {
+      // No data specified - uses shared data
+      renderType: 'bar',
+      title: 'Using Shared Data',
+      yAxisLabel: 'Value',
+      barColor: '#4a90d9'
+    },
+    {
+      data: customData,  // This chart has its own data
+      renderType: 'bar',
+      title: 'Using Custom Data',
+      yAxisLabel: 'Custom',
+      barColor: '#e74c3c'
+    }
+  ]
+});</code></pre>
+    </div>
+  </div>
+
+  <script src="../src/barchart.js"></script>
+  <script>
+    // Toggle code visibility
+    function toggleCode(id) {
+      const block = document.getElementById(id);
+      block.classList.toggle('visible');
+    }
+
+    // Helper: Generate dates for a given number of days
+    function generateDates(days, startDate = '2023-01-01') {
+      const dates = [];
+      const start = new Date(startDate);
+      for (let i = 0; i < days; i++) {
+        const date = new Date(start);
+        date.setDate(start.getDate() + i);
+        dates.push(date.toISOString().split('T')[0]);
+      }
+      return dates;
+    }
+
+    // Generate revenue data (higher values, in thousands)
+    function generateRevenueData(days) {
+      const dates = generateDates(days);
+      let revenue = 5000;
+      return dates.map((date, i) => {
+        const seasonality = Math.sin((i / 365) * Math.PI * 2) * 1500;
+        const weekendDip = (new Date(date).getDay() === 0 || new Date(date).getDay() === 6) ? -1000 : 0;
+        const noise = (Math.random() - 0.5) * 2000;
+        revenue = Math.max(1000, Math.min(15000, revenue + noise * 0.3));
+        return {
+          date: date,
+          value: Math.round(revenue + seasonality + weekendDip)
+        };
+      });
+    }
+
+    // Generate orders data (smaller values, counts)
+    function generateOrdersData(days) {
+      const dates = generateDates(days);
+      let orders = 150;
+      return dates.map((date, i) => {
+        const seasonality = Math.sin((i / 365) * Math.PI * 2) * 30;
+        const weekendDip = (new Date(date).getDay() === 0 || new Date(date).getDay() === 6) ? -40 : 0;
+        const noise = (Math.random() - 0.5) * 50;
+        orders = Math.max(50, Math.min(300, orders + noise * 0.3));
+        return {
+          date: date,
+          value: Math.round(orders + seasonality + weekendDip)
+        };
+      });
+    }
+
+    // Generate temperature data with high/low values
+    function generateTemperatureData(days) {
+      const dates = generateDates(days);
+      return dates.map((date, i) => {
+        // Seasonal temperature pattern
+        const baseTemp = 60 + Math.sin((i / 365) * Math.PI * 2) * 25;
+        const dailyVariation = (Math.random() - 0.5) * 10;
+        const avgTemp = baseTemp + dailyVariation;
+        const spread = 8 + Math.random() * 10;
+        return {
+          date: date,
+          value: Math.round(avgTemp),
+          highValue: Math.round(avgTemp + spread / 2),
+          lowValue: Math.round(avgTemp - spread / 2)
+        };
+      });
+    }
+
+    // Generate humidity data (percentage 0-100)
+    function generateHumidityData(days) {
+      const dates = generateDates(days);
+      let humidity = 50;
+      return dates.map((date, i) => {
+        const seasonality = Math.sin((i / 365) * Math.PI * 2 + Math.PI) * 15;
+        const noise = (Math.random() - 0.5) * 20;
+        humidity = Math.max(20, Math.min(95, humidity + noise * 0.4));
+        return {
+          date: date,
+          value: Math.round(humidity + seasonality)
+        };
+      });
+    }
+
+    // Generate stock price data with high/low
+    function generateStockPriceData(days) {
+      const dates = generateDates(days);
+      let price = 150;
+      return dates.map((date, i) => {
+        const trend = i * 0.1;
+        const noise = (Math.random() - 0.5) * 8;
+        price = Math.max(100, price + noise);
+        const spread = 2 + Math.random() * 5;
+        return {
+          date: date,
+          value: Math.round((price + trend) * 100) / 100,
+          highValue: Math.round((price + trend + spread) * 100) / 100,
+          lowValue: Math.round((price + trend - spread) * 100) / 100
+        };
+      });
+    }
+
+    // Generate volume data (large numbers)
+    function generateVolumeData(days) {
+      const dates = generateDates(days);
+      return dates.map((date, i) => {
+        const baseVolume = 5000000;
+        const variation = (Math.random() - 0.3) * 8000000;
+        return {
+          date: date,
+          value: Math.max(500000, Math.round(baseVolume + variation))
+        };
+      });
+    }
+
+    // Generate RSI data (0-100 oscillator)
+    function generateRSIData(days) {
+      const dates = generateDates(days);
+      let rsi = 50;
+      return dates.map((date, i) => {
+        const noise = (Math.random() - 0.5) * 15;
+        rsi = Math.max(15, Math.min(85, rsi + noise));
+        return {
+          date: date,
+          value: Math.round(rsi)
+        };
+      });
+    }
+
+    // Generate generic daily data
+    function generateDailyData(days) {
+      const dates = generateDates(days);
+      let value = 50;
+      return dates.map((date, i) => {
+        const noise = (Math.random() - 0.5) * 20;
+        value = Math.max(10, Math.min(100, value + noise * 0.3));
+        return {
+          date: date,
+          value: Math.round(value * 10) / 10
+        };
+      });
+    }
+
+    // Generate custom data (different pattern)
+    function generateCustomData(days) {
+      const dates = generateDates(days);
+      return dates.map((date, i) => {
+        const wave = Math.sin(i / 10) * 30 + 50;
+        const noise = (Math.random() - 0.5) * 10;
+        return {
+          date: date,
+          value: Math.round(wave + noise)
+        };
+      });
+    }
+
+
+    // Example 1: Revenue vs Orders
+    const revenueData = generateRevenueData(365);
+    const ordersData = generateOrdersData(365);
+
+    Barchart.createMultiChart({
+      container: '#multiChart1',
+      chartType: 'byDay',
+      visibleWidth: 900,
+      chartHeight: 180,
+      barMinWidth: 6,
+      scrollToEnd: true,
+      charts: [
+        {
+          data: revenueData,
+          renderType: 'bar',
+          title: 'Daily calls',
+          yAxisLabel: 'Calls',
+          barColor: '#4a90d9',
+          yAxisFormat: 'K'
+        },
+        {
+          data: ordersData,
+          renderType: 'bar',
+          title: 'Daily Error',
+          yAxisLabel: 'Error',
+          barColor: '#ff0060',
+          yAxisFormat: '0.0 %'
+        }
+      ]
+    });
+
+    // Example 2: Temperature vs Humidity
+    const temperatureData = generateTemperatureData(180);
+    const humidityData = generateHumidityData(180);
+
+    Barchart.createMultiChart({
+      container: '#multiChart2',
+      chartType: 'byDay',
+      visibleWidth: 900,
+      chartHeight: 160,
+      barMinWidth: 8,
+      scrollToEnd: true,
+      charts: [
+        {
+          data: temperatureData,
+          renderType: 'high-low',
+          title: 'Temperature Range (°F)',
+          yAxisLabel: 'Temp',
+          highLowColor: '#e74c3c',
+          avgMarkerColor: '#fff',
+          yAxisStartAtZero: false
+        },
+        {
+          data: humidityData,
+          renderType: 'bar',
+          title: 'Humidity (%)',
+          yAxisLabel: '%',
+          barColor: '#3498db'
+        }
+      ]
+    });
+
+    // Example 3: Stock Data
+    const priceData = generateStockPriceData(200);
+    const volumeData = generateVolumeData(200);
+    const rsiData = generateRSIData(200);
+
+    Barchart.createMultiChart({
+      container: '#multiChart3',
+      chartType: 'byDay',
+      visibleWidth: 900,
+      chartHeight: 140,
+      barMinWidth: 6,
+      scrollToEnd: true,
+      charts: [
+        {
+          data: priceData,
+          renderType: 'high-low',
+          title: 'Stock Price (High-Low)',
+          yAxisLabel: 'Price',
+          highLowColor: '#2c3e50',
+          avgMarkerColor: '#f39c12',
+          yAxisStartAtZero: false
+        },
+        {
+          data: volumeData,
+          renderType: 'bar',
+          title: 'Trading Volume',
+          yAxisLabel: 'Vol',
+          barColor: '#9b59b6',
+          yAxisFormat: 'M'
+        },
+        {
+          data: rsiData,
+          renderType: 'bar',
+          title: 'RSI Indicator',
+          yAxisLabel: 'RSI',
+          barColor: '#16a085'
+        }
+      ]
+    });
+
+    // Example 4: Mixed shared + per-chart data
+    const sharedData = generateDailyData(100);
+    const customData = generateCustomData(100);
+
+    Barchart.createMultiChart({
+      container: '#multiChart4',
+      data: sharedData,
+      chartType: 'byDay',
+      visibleWidth: 900,
+      chartHeight: 150,
+      barMinWidth: 10,
+      charts: [
+        {
+          renderType: 'bar',
+          title: 'Using Shared Data',
+          yAxisLabel: 'Value',
+          barColor: '#4a90d9'
+        },
+        {
+          data: customData,
+          renderType: 'bar',
+          title: 'Using Custom Data',
+          yAxisLabel: 'Custom',
+          barColor: '#e74c3c'
+        }
+      ]
+    });
+
+    console.log('Per-chart data examples loaded successfully!');
+  </script>
+</body>
+
+</html>

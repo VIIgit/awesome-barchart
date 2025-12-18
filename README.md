@@ -1,4 +1,4 @@
-# Barchart Library v2
+# Barchart Library
 
 A modern, mode-driven JavaScript library for creating interactive bar charts with multiple visualization types.
 
@@ -118,6 +118,7 @@ Create multiple charts with a shared x-axis.
 | `showGrid` | boolean | true | Show grid lines |
 
 Each chart in the `charts` array can have:
+
 - `renderType`: 'bar' or 'high-low'
 - `title`: Chart title
 - `yAxisLabel`: Y-axis label

@@ -156,16 +156,32 @@
   }
 
   /**
-   * Format large numbers with K, M, B suffixes
+   * Format large numbers with K, M, B suffixes or custom format patterns
    * @param {number} value - The number to format
-   * @param {string} format - Format type: 'auto', 'K', 'M', 'B', or 'none'
+   * @param {string} format - Format type: 'none', 'auto', 'K', 'M', 'B', or custom pattern like '0.0 %'
    * @param {number} decimals - Number of decimal places (default: 2)
    * @param {boolean} useThousandSeparator - Whether to add thousand separators (default: true)
    * @returns {string} Formatted number string
    */
-  function formatNumber(value, format = 'auto', decimals = 2, useThousandSeparator = true) {
+  function formatNumber(value, format = 'none', decimals = 2, useThousandSeparator = true) {
     if (value === 0) {
+      // Handle custom format patterns for zero
+      if (format && format.includes('%')) {
+        const match = format.match(/0(\.0+)?/);
+        const patternDecimals = match && match[1] ? match[1].length - 1 : 0;
+        return (0).toFixed(patternDecimals) + ' %';
+      }
       return '0';
+    }
+    
+    // Check for custom format pattern (e.g., '0.0 %', '0.00 %')
+    if (format && format.includes('%')) {
+      // Extract decimal places from pattern (count zeros after decimal point)
+      const match = format.match(/0(\.0+)?/);
+      const patternDecimals = match && match[1] ? match[1].length - 1 : 0;
+      const numStr = value.toFixed(patternDecimals);
+      const formatted = useThousandSeparator ? addThousandSeparators(numStr) : numStr;
+      return formatted + ' %';
     }
     
     if (format === 'none') {
@@ -345,18 +361,44 @@
   // ============================================================================
 
   /**
+   * Generate tooltip content for a data point
+   * @param {Object} d - Data point
+   * @param {Object} cfg - Chart configuration
+   * @param {string} numberFormat - Number format
+   * @param {number} numberDecimals - Decimal places
+   * @param {boolean} useThousandSeparator - Use thousand separators
+   * @returns {string} HTML content for tooltip
+   */
+  function generateTooltipContent(d, cfg, numberFormat, numberDecimals, useThousandSeparator) {
+    if (cfg.tooltipFormatter && typeof cfg.tooltipFormatter === 'function') {
+      return cfg.tooltipFormatter(d, cfg);
+    } else if (cfg.renderType === 'high-low') {
+      const formattedHigh = formatNumber(d.highValue, numberFormat, numberDecimals, useThousandSeparator);
+      const formattedLow = formatNumber(d.lowValue, numberFormat, numberDecimals, useThousandSeparator);
+      const formattedAvg = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
+      const title = cfg.title ? `<strong>${cfg.title}</strong><br>` : '';
+      return `${title}High: ${formattedHigh}<br>Low: ${formattedLow}<br>Avg: ${formattedAvg}`;
+    } else {
+      const formattedValue = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
+      const title = cfg.title ? `<strong>${cfg.title}</strong><br>` : '';
+      return `${title}Value: ${formattedValue}`;
+    }
+  }
+
+  /**
    * Render a single chart panel (for use in multi-chart or standalone)
    * @param {Object} cfg - Chart configuration
    * @param {Array} aggregatedData - Pre-aggregated data
    * @param {number} barStep - Bar step width
    * @param {number} barWidth - Bar width
    * @param {Object} tooltip - Shared tooltip element
-   * @returns {Object} { yAxisSvg, chartSvg }
+   * @param {boolean} multiChartMode - If true, hover is managed externally
+   * @returns {Object} { yAxisSvg, chartSvg, hoverData }
    */
-  function renderChartPanel(cfg, aggregatedData, barStep, barWidth, tooltip) {
+  function renderChartPanel(cfg, aggregatedData, barStep, barWidth, tooltip, multiChartMode = false) {
     const { innerWidth, innerHeight, margin } = cfg;
     const useLogScale = cfg.yAxisScale === 'log10';
-    const numberFormat = cfg.yAxisFormat || 'auto';
+    const numberFormat = cfg.yAxisFormat || 'none';
     const numberDecimals = cfg.yAxisDecimals !== undefined ? cfg.yAxisDecimals : 2;
     const useThousandSeparator = cfg.useThousandSeparator !== false; // default true
 
@@ -740,7 +782,10 @@
             if (cfg.tooltipFormatter && typeof cfg.tooltipFormatter === 'function') {
               tooltip.innerHTML = cfg.tooltipFormatter(d, cfg);
             } else {
-              tooltip.innerHTML = `<strong>${d.date}</strong><br>High: ${d.highValue}<br>Low: ${d.lowValue}<br>Avg: ${d.value}`;
+              const formattedHigh = formatNumber(d.highValue, numberFormat, numberDecimals, useThousandSeparator);
+              const formattedLow = formatNumber(d.lowValue, numberFormat, numberDecimals, useThousandSeparator);
+              const formattedAvg = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
+              tooltip.innerHTML = `<strong>${d.date}</strong><br>High: ${formattedHigh}<br>Low: ${formattedLow}<br>Avg: ${formattedAvg}`;
             }
             tooltip.style.display = 'block';
             positionTooltip(tooltip, e);
@@ -770,7 +815,8 @@
             if (cfg.tooltipFormatter && typeof cfg.tooltipFormatter === 'function') {
               tooltip.innerHTML = cfg.tooltipFormatter(d, cfg);
             } else {
-              tooltip.innerHTML = `<strong>${d.date}</strong><br>Value: ${d.value}`;
+              const formattedValue = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
+              tooltip.innerHTML = `<strong>${d.date}</strong><br>Value: ${formattedValue}`;
             }
             tooltip.style.display = 'block';
             positionTooltip(tooltip, e);
@@ -809,8 +855,45 @@
     
     chartGroup.appendChild(hoverIndicatorGroup);
 
+    // Pre-calculate bar positions for hover
+    const barPositions = aggregatedData.map((d, i) => {
+      const x = i * barStep;
+      const barCenterX = x + barStep / 2;
+      const barTopY = yScale(d.value);
+      return { x, barCenterX, barTopY, data: d, index: i };
+    });
+
+    // Hover data for external management (multi-chart mode)
+    const hoverData = {
+      hoverIndicatorGroup,
+      hoverLine,
+      hoverCircle,
+      barPositions,
+      cfg: { ...cfg, numberFormat, numberDecimals, useThousandSeparator },
+      aggregatedData,
+      yScale,
+      showHover: (index, barCenterX) => {
+        const pos = barPositions[index];
+        if (!pos) return;
+        hoverIndicatorGroup.style.display = 'block';
+        hoverLine.setAttribute('x1', barCenterX);
+        hoverLine.setAttribute('x2', barCenterX);
+        hoverCircle.setAttribute('cx', barCenterX);
+        hoverCircle.setAttribute('cy', pos.barTopY);
+      },
+      hideHover: () => {
+        hoverIndicatorGroup.style.display = 'none';
+      },
+      getTooltipContent: (index) => {
+        const d = aggregatedData[index];
+        if (!d) return '';
+        return generateTooltipContent(d, cfg, numberFormat, numberDecimals, useThousandSeparator);
+      }
+    };
+
     // Add invisible hover zones for each bar (full height for vertical hover tooltip)
-    if (tooltip) {
+    // Only add standalone hover handling if NOT in multi-chart mode
+    if (tooltip && !multiChartMode) {
       const hoverZonesGroup = createSVGElement('g', { class: 'hover-zones' });
       
       aggregatedData.forEach((d, i) => {
@@ -849,9 +932,13 @@
           if (cfg.tooltipFormatter && typeof cfg.tooltipFormatter === 'function') {
             tooltip.innerHTML = cfg.tooltipFormatter(d, cfg);
           } else if (cfg.renderType === 'high-low') {
-            tooltip.innerHTML = `<strong>${d.date}</strong><br>High: ${d.highValue}<br>Low: ${d.lowValue}<br>Avg: ${d.value}`;
+            const formattedHigh = formatNumber(d.highValue, numberFormat, numberDecimals, useThousandSeparator);
+            const formattedLow = formatNumber(d.lowValue, numberFormat, numberDecimals, useThousandSeparator);
+            const formattedAvg = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
+            tooltip.innerHTML = `<strong>${d.date}</strong><br>High: ${formattedHigh}<br>Low: ${formattedLow}<br>Avg: ${formattedAvg}`;
           } else {
-            tooltip.innerHTML = `<strong>${d.date}</strong><br>Value: ${d.value}`;
+            const formattedValue = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
+            tooltip.innerHTML = `<strong>${d.date}</strong><br>Value: ${formattedValue}`;
           }
           tooltip.style.display = 'block';
           positionTooltip(tooltip, e);
@@ -877,7 +964,7 @@
     // Store title in config for later use
     const titleText = cfg.title || null;
 
-    return { yAxisSvg, chartSvg, innerHeight, titleText };
+    return { yAxisSvg, chartSvg, innerHeight, titleText, hoverData };
   }
 
   // ============================================================================
@@ -906,8 +993,10 @@
   }
 
   function renderXAxis(cfg, aggregatedData, barStep, innerWidth, margin) {
-    // Increase height for week mode to fit week labels (row 1) + year/quarter labels (row 2)
-    const xAxisHeight = cfg.chartType === 'byWeek' ? 55 : 60;
+    // Increase height for multi-level labels:
+    // byDay: day (row 1) + month (row 2) + year (row 3)
+    // byWeek: week (row 1) + quarter (row 2) + year (row 3)
+    const xAxisHeight = (cfg.chartType === 'byWeek' || cfg.chartType === 'byDay') ? 55 : 60;
     const chartGap = 5;
 
     // Empty y-axis spacer
@@ -974,22 +1063,9 @@
           labelText = `W${week}`;
           // Year and quarter labels are rendered separately below
         } else if (cfg.chartType === 'byDay') {
-          // Show abbreviated date
+          // Show just the day number (month/year are rendered separately below)
           const parts = d.date.split('-');
-          labelText = `${parts[1]}/${parts[2]}`;
-          
-          // Show year on first label of each year
-          const year = parts[0];
-          if (!processedYears.has(year)) {
-            processedYears.add(year);
-            const yearLabel = createSVGElement('text', {
-              x: x, y: 35,
-              class: 'year-label',
-              'text-anchor': 'middle'
-            });
-            yearLabel.textContent = year;
-            xAxisGroup.appendChild(yearLabel);
-          }
+          labelText = parts[2]; // Just the day: "15"
         }
 
         const label = createSVGElement('text', {
@@ -1093,6 +1169,107 @@
       }
     }
 
+    // For byDay mode: render month and year labels on separate rows
+    if (cfg.chartType === 'byDay') {
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const processedMonths = new Set();
+      let lastYear = null;
+      let lastMonth = null;
+      let yearStartIdx = 0;
+      let monthStartIdx = 0;
+
+      aggregatedData.forEach((d, i) => {
+        const x = i * barStep + barStep / 2;
+        const parts = d.date.split('-');
+        const year = parts[0];
+        const month = parts[1];
+        const monthKey = `${year}-${month}`;
+
+        // Track month boundaries
+        if (lastMonth !== monthKey) {
+          // Place month label for previous month
+          if (lastMonth !== null) {
+            const prevEndX = (i - 1) * barStep + barStep / 2;
+            const monthLabelX = (monthStartIdx * barStep + barStep / 2 + prevEndX) / 2;
+            const [prevYear, prevMonth] = lastMonth.split('-');
+            const monthLabel = createSVGElement('text', {
+              x: monthLabelX, y: 35,
+              class: 'week-label',
+              'text-anchor': 'middle'
+            });
+            monthLabel.textContent = monthNames[parseInt(prevMonth) - 1];
+            xAxisGroup.appendChild(monthLabel);
+
+            // Draw a subtle vertical line at month boundary
+            const boundaryX = i * barStep;
+            xAxisGroup.appendChild(createSVGElement('line', {
+              x1: boundaryX, y1: 0,
+              x2: boundaryX, y2: xAxisHeight - 10,
+              class: 'axis-tick',
+              'stroke-dasharray': '2,2',
+              'stroke-opacity': '0.4'
+            }));
+          }
+          monthStartIdx = i;
+          lastMonth = monthKey;
+        }
+
+        // Track year boundaries
+        if (lastYear !== year) {
+          // Place year label for previous year
+          if (lastYear !== null) {
+            const prevEndX = (i - 1) * barStep + barStep / 2;
+            const yearLabelX = (yearStartIdx * barStep + barStep / 2 + prevEndX) / 2;
+            const yearLabel = createSVGElement('text', {
+              x: yearLabelX, y: 45,
+              class: 'year-label',
+              'text-anchor': 'middle'
+            });
+            yearLabel.textContent = lastYear;
+            xAxisGroup.appendChild(yearLabel);
+
+            // Draw year boundary line
+            const boundaryX = i * barStep;
+            xAxisGroup.appendChild(createSVGElement('line', {
+              x1: boundaryX, y1: 0,
+              x2: boundaryX, y2: xAxisHeight,
+              class: 'axis-line',
+              'stroke-width': '1'
+            }));
+          }
+          yearStartIdx = i;
+          lastYear = year;
+        }
+      });
+
+      // Place the last month label
+      if (lastMonth !== null) {
+        const lastX = (aggregatedData.length - 1) * barStep + barStep / 2;
+        const monthLabelX = (monthStartIdx * barStep + barStep / 2 + lastX) / 2;
+        const [prevYear, prevMonth] = lastMonth.split('-');
+        const monthLabel = createSVGElement('text', {
+          x: monthLabelX, y: 35,
+          class: 'week-label',
+          'text-anchor': 'middle'
+        });
+        monthLabel.textContent = monthNames[parseInt(prevMonth) - 1];
+        xAxisGroup.appendChild(monthLabel);
+      }
+
+      // Place the last year label
+      if (lastYear !== null) {
+        const lastX = (aggregatedData.length - 1) * barStep + barStep / 2;
+        const yearLabelX = (yearStartIdx * barStep + barStep / 2 + lastX) / 2;
+        const yearLabel = createSVGElement('text', {
+          x: yearLabelX, y: 45,
+          class: 'year-label',
+          'text-anchor': 'middle'
+        });
+        yearLabel.textContent = lastYear;
+        xAxisGroup.appendChild(yearLabel);
+      }
+    }
+
     return { xAxisYSpacer, xAxisSvg };
   }
 
@@ -1102,14 +1279,15 @@
 
   /**
    * Create multiple charts with shared x-axis
+   * Each chart can have its own data array, or use shared data from config.data
    * @param {Object} config - Configuration object
    * @returns {HTMLElement} The chart container element
    */
   function createMultiChart(config) {
     const defaults = {
       container: null,
-      data: [],
-      charts: [],          // Array of chart configs: [{ renderType, yAxisLabel, barColor, ... }, ...]
+      data: [],            // Shared data (used if chart doesn't have its own data)
+      charts: [],          // Array of chart configs: [{ data, renderType, yAxisLabel, barColor, ... }, ...]
       chartType: 'byDay',  // Shared x-axis grouping
       visibleWidth: 800,   // Visible width (scrollable if content exceeds)
       chartHeight: 200,    // Height per chart
@@ -1123,32 +1301,70 @@
 
     const cfg = { ...defaults, ...config };
 
-    // Normalize data
-    let data = cfg.data.map(d => ({
-      date: d.date instanceof Date ? d.date : new Date(d.date),
-      value: Number(d.value),
-      highValue: d.highValue !== undefined ? Number(d.highValue) : undefined,
-      lowValue: d.lowValue !== undefined ? Number(d.lowValue) : undefined
-    })).filter(d => !isNaN(d.date.getTime()) && !isNaN(d.value));
+    // Helper function to normalize and aggregate data for a single dataset
+    function processData(rawData) {
+      const normalized = rawData.map(d => ({
+        date: d.date instanceof Date ? d.date : new Date(d.date),
+        value: Number(d.value),
+        highValue: d.highValue !== undefined ? Number(d.highValue) : undefined,
+        lowValue: d.lowValue !== undefined ? Number(d.lowValue) : undefined
+      })).filter(d => !isNaN(d.date.getTime()) && !isNaN(d.value));
 
-    if (data.length === 0) {
+      if (normalized.length === 0) {
+        return [];
+      }
+
+      // Aggregate data based on chartType
+      if (cfg.chartType !== 'byDay') {
+        return aggregates(normalized, cfg.chartType);
+      } else {
+        return normalized.map(d => ({
+          date: d.date.toISOString().split('T')[0],
+          value: d.value,
+          highValue: d.highValue || d.value,
+          lowValue: d.lowValue || d.value,
+          count: 1
+        }));
+      }
+    }
+
+    // Determine if we're using per-chart data or shared data
+    const hasPerChartData = cfg.charts.some(chart => chart.data && chart.data.length > 0);
+    
+    // Process shared data (for backwards compatibility and x-axis rendering)
+    let sharedAggregatedData = [];
+    if (cfg.data && cfg.data.length > 0) {
+      sharedAggregatedData = processData(cfg.data);
+    }
+
+    // If using per-chart data, process each chart's data separately
+    const chartDataSets = [];
+    if (hasPerChartData) {
+      cfg.charts.forEach((chartCfg, index) => {
+        const chartData = chartCfg.data && chartCfg.data.length > 0 ? chartCfg.data : cfg.data;
+        const aggregated = processData(chartData);
+        chartDataSets.push(aggregated);
+        
+        // Use the first chart's data for x-axis if no shared data
+        if (index === 0 && sharedAggregatedData.length === 0) {
+          sharedAggregatedData = aggregated;
+        }
+      });
+    } else {
+      // All charts use the same shared data
+      cfg.charts.forEach(() => {
+        chartDataSets.push(sharedAggregatedData);
+      });
+    }
+
+    // Validate we have data to render
+    if (sharedAggregatedData.length === 0) {
       console.warn('No valid data points provided');
       return null;
     }
 
-    // Aggregate data
-    let aggregatedData;
-    if (cfg.chartType !== 'byDay') {
-      aggregatedData = aggregates(data, cfg.chartType);
-    } else {
-      aggregatedData = data.map(d => ({
-        date: d.date.toISOString().split('T')[0],
-        value: d.value,
-        highValue: d.highValue || d.value,
-        lowValue: d.lowValue || d.value,
-        count: 1
-      }));
-    }
+    // Use the first chart's data length for bar count (all should be aligned)
+    const aggregatedData = sharedAggregatedData;
 
     // Calculate dimensions
     const barCount = aggregatedData.length;
@@ -1172,6 +1388,10 @@
     mainContainer.className = 'barchart-container';
     mainContainer.style.width = cfg.visibleWidth + 'px';
 
+    // Collect hover data from all chart panels for synchronized hover
+    const allChartHoverData = [];
+    const isMultiChart = cfg.charts.length > 1;
+
     // Create rows for each chart
     cfg.charts.forEach((chartCfg, index) => {
       const row = document.createElement('div');
@@ -1186,14 +1406,14 @@
         margin: cfg.margin
       };
 
-      // Re-aggregate if different renderType needs it
-      let panelData = aggregatedData;
-      if (chartCfg.renderType === 'high-low' && cfg.chartType === 'byDay') {
-        // For high-low with byDay, we need the aggregated high/low values
-        panelData = aggregatedData;
-      }
+      // Use the per-chart data for this chart
+      const panelData = chartDataSets[index];
 
-      const { yAxisSvg, chartSvg, titleText } = renderChartPanel(panelCfg, panelData, barStep, barWidth, tooltip);
+      // Pass multiChartMode=true if we have multiple charts
+      const { yAxisSvg, chartSvg, titleText, hoverData } = renderChartPanel(panelCfg, panelData, barStep, barWidth, tooltip, isMultiChart);
+      
+      // Store hover data for synchronized hover
+      allChartHoverData.push(hoverData);
 
       // Y-axis container (sticky)
       const yAxisContainer = document.createElement('div');
@@ -1254,6 +1474,80 @@
 
     mainContainer.appendChild(xAxisRow);
     xAxisRow._scrollContainer = xAxisScrollContainer;
+
+    // Set up synchronized hover across all charts (multi-chart mode only)
+    if (isMultiChart && tooltip && allChartHoverData.length > 0) {
+      // Create a single hover overlay layer for the entire multi-chart container
+      // This captures mouse events and syncs hover across all charts
+      
+      // Get all chart scroll containers (excluding x-axis)
+      const chartRows = Array.from(mainContainer.querySelectorAll('.barchart-row:not(.barchart-xaxis-row)'));
+      
+      chartRows.forEach((row, rowIndex) => {
+        const scrollContainer = row.querySelector('.barchart-scroll-container');
+        const chartSvg = scrollContainer.querySelector('.barchart-chart');
+        if (!chartSvg) return;
+        
+        // Find the chart group (first g element with transform)
+        const chartGroup = chartSvg.querySelector('g[transform]');
+        if (!chartGroup) return;
+        
+        // Create hover zones group for this chart
+        const hoverZonesGroup = createSVGElement('g', { class: 'hover-zones' });
+        
+        const hoverData = allChartHoverData[rowIndex];
+        if (!hoverData) return;
+        
+        hoverData.barPositions.forEach((pos, i) => {
+          const hoverZone = createSVGElement('rect', {
+            x: pos.x,
+            y: 0,
+            width: barStep,
+            height: cfg.chartHeight,
+            class: 'hover-zone',
+            fill: 'transparent',
+            'pointer-events': 'all'
+          });
+          
+          hoverZone.addEventListener('mouseenter', (e) => {
+            const barCenterX = pos.barCenterX;
+            
+            // Show hover indicators on ALL charts
+            allChartHoverData.forEach(chartHover => {
+              chartHover.showHover(i, barCenterX);
+            });
+            
+            // Build combined tooltip with date header and all chart values
+            const dateLabel = hoverData.aggregatedData[i]?.date || '';
+            let tooltipContent = `<strong>${dateLabel}</strong><hr style="margin: 4px 0; border: none; border-top: 1px solid #ddd;">`;
+            
+            allChartHoverData.forEach(chartHover => {
+              tooltipContent += '<br>' + chartHover.getTooltipContent(i) + '<br>';
+            });
+            
+            tooltip.innerHTML = tooltipContent;
+            tooltip.style.display = 'block';
+            positionTooltip(tooltip, e);
+          });
+          
+          hoverZone.addEventListener('mousemove', (e) => {
+            positionTooltip(tooltip, e);
+          });
+          
+          hoverZone.addEventListener('mouseleave', () => {
+            // Hide hover indicators on ALL charts
+            allChartHoverData.forEach(chartHover => {
+              chartHover.hideHover();
+            });
+            tooltip.style.display = 'none';
+          });
+          
+          hoverZonesGroup.appendChild(hoverZone);
+        });
+        
+        chartGroup.appendChild(hoverZonesGroup);
+      });
+    }
 
     // Sync scrolling across all charts and x-axis
     // Use a lock that persists briefly to prevent feedback loops causing "bouncing"
@@ -1380,7 +1674,7 @@
       xAxisLabel: '',
       barMinWidth: 8,
       yAxisScale: 'linear',   // 'linear' or 'log10'
-      yAxisFormat: 'auto',    // 'auto', 'K', 'M', 'B', or 'none'
+      yAxisFormat: 'none',    // 'none', 'auto', 'K', 'M', 'B', or custom pattern like '0.0 %'
       yAxisDecimals: 2,       // Number of decimal places for formatted numbers
       useThousandSeparator: true, // Whether to format numbers with thousand separators
       yAxisStartAtZero: true, // Whether y-axis starts at 0 (true) or at min data value (false)

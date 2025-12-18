@@ -8,6 +8,7 @@
 - **Customizable Tooltip Content**: Tooltip content is user-configurable via function/template.
 - **Tooltip Positioning in Multi-Chart**: Tooltip always appears next to the mouse, never obscuring chart content.
 - **Multiple Chart Types with Shared X-Axis**: Support for vertically stacked charts, each with its own y-axis, sharing a synchronized x-axis.
+- **Per-Chart Data Sets in Multi-Chart**: Each chart in a multi-chart config can specify its own `data` array. All charts share the same x-axis domain (number and order of records), but each chart's values are sourced from its own data set. Data arrays must be aligned by x-axis key (e.g., date), and have the same length/order.
 - **Minimal Gap and Bottom Alignment**: Minimal gap (5–10px) between y-axis and chart; chart is bottom-aligned above x-axis.
 - **Smooth Scrolling**: Horizontal scrolling is smooth and responsive.
 - **Quarter Labels for Week-Based Y-Axis**: Week-based charts show both week and quarter/year labels, with visual boundaries.
@@ -35,15 +36,39 @@
 - Accepts generic array of data objects: `{ date, value, [highValue], [lowValue] }`.
 - `chartType` configures x-axis grouping/formatting only; bars are rendered from provided data.
 - Data is automatically aggregated according to selected mode.
-- Example config:
+- **Multi-Chart Per-Chart Data Example**:
+  
   ```js
-  const config = {
-    chartType: 'byMonth',
-    renderType: 'bar',
-    data: [...],
-    // ...other options
-  };
+  Barchart.createMultiChart({
+    container: '#multiChart1',
+    chartType: 'byDay',
+    visibleWidth: 900,
+    chartHeight: 180,
+    barMinWidth: 6,
+    scrollToEnd: true,
+    charts: [
+      {
+        data: data700a,
+        renderType: 'bar',
+        title: 'Daily Values',
+        yAxisLabel: 'Value',
+        barColor: '#4a90d9'
+      },
+      {
+        data: data700b,
+        renderType: 'high-low',
+        title: 'Value Range (same data as bars above)',
+        yAxisLabel: 'Range',
+        highLowColor: '#e74c3c',
+        avgMarkerColor: '#fff'
+      }
+    ]
+  });
   ```
+  - Each chart in the `charts` array provides its own `data` array.
+  - All `data` arrays must be aligned by x-axis key (e.g., date) and have the same length/order.
+  - The x-axis is shared and synchronized across all charts.
+
 - Data aggregation utility: `aggregates(data, mode)` converts plain data to grouped high-low-average format for any supported chartType.
 
 ---
