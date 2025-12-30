@@ -127,6 +127,11 @@
   scrollbar-color: #c0c0c0 #f0f0f0;
 }
 
+/* Hide scrollbar when content fits (no scrolling needed) */
+.barchart-scroll-container.no-scroll {
+  overflow-x: hidden;
+}
+
 .barchart-xaxis-scroll::-webkit-scrollbar {
   height: 8px;
 }
@@ -272,6 +277,10 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
   line-height: 1.5;
   max-width: 200px;
+}
+
+.chart-tooltip td{
+  background: rgba(0, 0, 0, 0.88);
 }
 
 .chart-tooltip strong {

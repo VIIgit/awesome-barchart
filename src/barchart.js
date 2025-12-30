@@ -228,6 +228,47 @@
     return sign + cleaned + suffix;
   }
 
+  /**
+   * Format date for tooltip display based on chart type
+   * @param {string} dateStr - The date string (e.g., "2025-02-01", "2025-W05", "2025")
+   * @param {string} chartType - The chart type (byMonth, byWeek, byYear, byDay, byWeekday)
+   * @returns {string} Formatted date string for tooltip display
+   */
+  function formatTooltipDate(dateStr, chartType) {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    
+    if (chartType === 'byMonth') {
+      // Convert "2025-02" or "2025-02-01" to "2025 Feb"
+      const parts = dateStr.split('-');
+      if (parts.length >= 2) {
+        const year = parts[0];
+        const month = parseInt(parts[1]) - 1;
+        return `${year} ${monthNames[month]}`;
+      }
+    } else if (chartType === 'byWeek') {
+      // Convert "2025-W05" to "2025 W05"
+      return dateStr.replace('-W', ' W');
+    } else if (chartType === 'byWeekday') {
+      // Convert "0" to "Sun", etc.
+      const dayIndex = parseInt(dateStr);
+      if (!isNaN(dayIndex) && dayIndex >= 0 && dayIndex <= 6) {
+        return days[dayIndex];
+      }
+    } else if (chartType === 'byDay') {
+      // Keep full date "2025-02-15" but format nicely
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const year = parts[0];
+        const month = parseInt(parts[1]) - 1;
+        const day = parseInt(parts[2]);
+        return `${day} ${monthNames[month]} ${year}`;
+      }
+    }
+    // Default: return as-is (byYear or unknown)
+    return dateStr;
+  }
+
   // ============================================================================
   // DATA AGGREGATION
   // ============================================================================
@@ -387,7 +428,7 @@
       const yAxisLabels = cfg.yAxisLabels || [];
       const colors = cfg.staggeredColors || ['#4a90d9', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#e67e22'];
       const title = cfg.title ? `<strong>${cfg.title}</strong><br>` : '';
-      let html = title + `<strong>${d.date}</strong><hr style="margin:4px 0;border:none;border-top:1px solid #ccc;"><table style="${tableStyle}">`;
+      let html = title + `<strong>${formatTooltipDate(d.date, cfg.chartType)}</strong><hr style="margin:4px 0;border:none;border-top:1px solid #ccc;"><table style="${tableStyle}">`;
       let total = 0;
       values.forEach((val, idx) => {
         const label = yAxisLabels[idx] || `Series ${idx + 1}`;
@@ -819,7 +860,7 @@
               const formattedHigh = formatNumber(d.highValue, numberFormat, numberDecimals, useThousandSeparator);
               const formattedLow = formatNumber(d.lowValue, numberFormat, numberDecimals, useThousandSeparator);
               const formattedAvg = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
-              tooltip.innerHTML = `<strong>${d.date}</strong><br>High: ${formattedHigh}<br>Low: ${formattedLow}<br>Avg: ${formattedAvg}`;
+              tooltip.innerHTML = `<strong>${formatTooltipDate(d.date, cfg.chartType)}</strong><br>High: ${formattedHigh}<br>Low: ${formattedLow}<br>Avg: ${formattedAvg}`;
             }
             tooltip.style.display = 'block';
             positionTooltip(tooltip, e);
@@ -864,7 +905,7 @@
             if (cfg.tooltipFormatter && typeof cfg.tooltipFormatter === 'function') {
               tooltip.innerHTML = cfg.tooltipFormatter(d, cfg);
             } else {
-              let html = `<strong>${d.date}</strong><br>`;
+              let html = `<strong>${formatTooltipDate(d.date, cfg.chartType)}</strong><br>`;
               let total = 0;
               values.forEach((val, idx) => {
                 const label = yAxisLabels[idx] || `Series ${idx + 1}`;
@@ -921,7 +962,7 @@
             if (cfg.tooltipFormatter && typeof cfg.tooltipFormatter === 'function') {
               tooltip.innerHTML = cfg.tooltipFormatter(d, cfg);
             } else {
-              let html = `<strong>${d.date}</strong><br>`;
+              let html = `<strong>${formatTooltipDate(d.date, cfg.chartType)}</strong><br>`;
               let total = 0;
               values.forEach((val, idx) => {
                 const label = yAxisLabels[idx] || `Series ${idx + 1}`;
@@ -964,7 +1005,7 @@
               tooltip.innerHTML = cfg.tooltipFormatter(d, cfg);
             } else {
               const formattedValue = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
-              tooltip.innerHTML = `<strong>${d.date}</strong><br>Value: ${formattedValue}`;
+              tooltip.innerHTML = `<strong>${formatTooltipDate(d.date, cfg.chartType)}</strong><br>Value: ${formattedValue}`;
             }
             tooltip.style.display = 'block';
             positionTooltip(tooltip, e);
@@ -1106,15 +1147,26 @@
             const values = d.values || [];
             const yAxisLabels = cfg.yAxisLabels || [];
             const colors = cfg.staggeredColors || ['#4a90d9', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#e67e22'];
-            let html = `<strong>${d.date}</strong><hr style="margin:4px 0;border:none;border-top:1px solid #ccc;"><table style="${tableStyle}">`;
+            let html = `<strong>${formatTooltipDate(d.date, cfg.chartType)}</strong><hr style="margin:4px 0;border:none;border-top:1px solid #ccc;"><table style="${tableStyle}">`;
             let total = 0;
-            values.forEach((val, idx) => {
+            
+            // For stacked charts, reverse the order so tooltip matches visual stack (top to bottom)
+            const indices = cfg.renderType === 'stacked' 
+              ? [...Array(values.length).keys()].reverse() 
+              : [...Array(values.length).keys()];
+            
+            // Calculate total first (needed for stacked display)
+            values.forEach(val => {
+              if (val !== null && val !== undefined) total += val;
+            });
+            
+            indices.forEach(idx => {
+              const val = values[idx];
               const label = yAxisLabels[idx] || `Series ${idx + 1}`;
               const color = colors[idx % colors.length];
               const circle = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:5px;vertical-align:middle;"></span>`;
               if (val !== null && val !== undefined) {
                 html += `<tr><td style="${labelStyle}">${circle}${label}:</td><td style="${valueStyle}">${formatNumber(val, numberFormat, numberDecimals, useThousandSeparator)}</td></tr>`;
-                total += val;
               } else {
                 html += `<tr><td style="${labelStyle}">${circle}${label}:</td><td style="${valueStyle}">—</td></tr>`;
               }
@@ -1125,10 +1177,10 @@
             const formattedHigh = formatNumber(d.highValue, numberFormat, numberDecimals, useThousandSeparator);
             const formattedLow = formatNumber(d.lowValue, numberFormat, numberDecimals, useThousandSeparator);
             const formattedAvg = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
-            tooltip.innerHTML = `<strong>${d.date}</strong><table style="${tableStyle}"><tr><td style="${labelStyle}">High:</td><td style="${valueStyle}">${formattedHigh}</td></tr><tr><td style="${labelStyle}">Low:</td><td style="${valueStyle}">${formattedLow}</td></tr><tr><td style="${labelStyle}">Avg:</td><td style="${valueStyle}">${formattedAvg}</td></tr></table>`;
+            tooltip.innerHTML = `<strong>${formatTooltipDate(d.date, cfg.chartType)}</strong><table style="${tableStyle}"><tr><td style="${labelStyle}">High:</td><td style="${valueStyle}">${formattedHigh}</td></tr><tr><td style="${labelStyle}">Low:</td><td style="${valueStyle}">${formattedLow}</td></tr><tr><td style="${labelStyle}">Avg:</td><td style="${valueStyle}">${formattedAvg}</td></tr></table>`;
           } else {
             const formattedValue = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
-            tooltip.innerHTML = `<strong>${d.date}</strong><table style="${tableStyle}"><tr><td style="${labelStyle}">Value:</td><td style="${valueStyle}">${formattedValue}</td></tr></table>`;
+            tooltip.innerHTML = `<strong>${formatTooltipDate(d.date, cfg.chartType)}</strong><table style="${tableStyle}"><tr><td style="${labelStyle}">Value:</td><td style="${valueStyle}">${formattedValue}</td></tr></table>`;
           }
           tooltip.style.display = 'block';
           positionTooltip(tooltip, e);
@@ -1543,6 +1595,7 @@
       scrollToEnd: false,      // Scroll initially to the rightmost bar
       title: '',               // Chart title (for single-panel charts)
       yAxisLabel: '',          // Y-axis label (for single-panel charts)
+      useThousandSeparator: true, // Use thousand separators in number formatting
       // Default series colors
       colors: ['#4a90d9', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#e67e22']
     };
@@ -1627,7 +1680,7 @@
             yAxisScale: s.yAxisScale || 'linear',
             yAxisFormat: s.yAxisFormat || 'none',
             yAxisDecimals: s.yAxisDecimals !== undefined ? s.yAxisDecimals : 2,
-            useThousandSeparator: s.useThousandSeparator !== undefined ? s.useThousandSeparator : true,
+            useThousandSeparator: s.useThousandSeparator !== undefined ? s.useThousandSeparator : cfg.useThousandSeparator,
             yAxisStartAtZero: s.yAxisStartAtZero !== undefined ? s.yAxisStartAtZero : true,
             tooltipFormatter: s.tooltipFormatter || cfg.tooltipFormatter
           }));
@@ -1898,7 +1951,8 @@
       const firstContainer = allScrollContainers[0];
       if (!firstContainer) return;
       
-      const needsScroll = firstContainer.scrollWidth > firstContainer.clientWidth;
+      // Use a small tolerance to account for sub-pixel rendering differences
+      const needsScroll = firstContainer.scrollWidth > firstContainer.clientWidth + 5;
       const scrollLeft = firstContainer.scrollLeft;
       const maxScroll = firstContainer.scrollWidth - firstContainer.clientWidth;
       
@@ -1923,10 +1977,20 @@
           chartArea.classList.remove('shadow-right');
         }
       });
+      
+      // Hide scrollbar when no scrolling is needed
+      allScrollContainers.forEach(container => {
+        if (needsScroll) {
+          container.classList.remove('no-scroll');
+        } else {
+          container.classList.add('no-scroll');
+        }
+      });
     }
     
-    // Initial check and on resize
-    updateShadowVisibility();
+    // Initial check after layout is complete, and on resize
+    // Use setTimeout to ensure DOM has been fully laid out
+    setTimeout(updateShadowVisibility, 0);
     window.addEventListener('resize', updateShadowVisibility);
     
     allScrollContainers.forEach(container => {
