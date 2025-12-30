@@ -196,17 +196,17 @@
       <pre><code>// Generate 700 days of data
 const data700 = generateDailyData(700);
 
-// Create multi-chart with shared x-axis
-Barchart.createMultiChart({
+// Create multi-panel chart with shared x-axis
+Barchart.createChart({
   container: '#multiChart1',
-  data: data700,
   chartType: 'byDay',
   visibleWidth: 900,
   chartHeight: 180,
   barMinWidth: 6,
   scrollToEnd: true,
-  charts: [
+  timeSeries: [
     {
+      data: data700,  // Data in first series, shared with all panels
       renderType: 'bar',
       title: 'Daily Values',
       yAxisLabel: 'Value',
@@ -238,14 +238,14 @@ Barchart.createMultiChart({
 
     <button class="code-toggle" onclick="toggleCode('code2')">Show Code</button>
     <div class="code-block" id="code2">
-      <pre><code>Barchart.createMultiChart({
+      <pre><code>Barchart.createChart({
   container: '#multiChart2',
-  data: data700,
   chartType: 'byMonth',  // Aggregate by month
   visibleWidth: 900,
   chartHeight: 150,
-  charts: [
+  timeSeries: [
     {
+      data: data700,  // Data in first series
       renderType: 'bar',
       title: 'Monthly Average',
       yAxisLabel: 'Avg',
@@ -278,15 +278,15 @@ Barchart.createMultiChart({
 
     <button class="code-toggle" onclick="toggleCode('code3')">Show Code</button>
     <div class="code-block" id="code3">
-      <pre><code>Barchart.createMultiChart({
+      <pre><code>Barchart.createChart({
   container: '#multiChart3',
-  data: data700,
   chartType: 'byWeek',  // Aggregate by week
   visibleWidth: 900,
   chartHeight: 200,
   barMinWidth: 10,
-  charts: [
+  timeSeries: [
     {
+      data: data700,
       renderType: 'high-low',
       title: 'Weekly Value Range',
       yAxisLabel: 'Range',
@@ -309,18 +309,20 @@ Barchart.createMultiChart({
 
     <button class="code-toggle" onclick="toggleCode('code4')">Show Code</button>
     <div class="code-block" id="code4">
-      <pre><code>// Single chart API (backward compatible)
-Barchart.createBarchart({
+      <pre><code>// Single chart using unified API
+Barchart.createChart({
   container: '#singleChart',
-  data: data700,
   chartType: 'byDay',
-  renderType: 'bar',
-  width: 900,
-  height: 300,
-  title: '700 Days of Data (Single Chart)',
-  yAxisLabel: 'Value',
+  visibleWidth: 900,
+  chartHeight: 260,
   barMinWidth: 5,
-  barColor: '#16a085'
+  timeSeries: [{
+    data: data700,
+    renderType: 'bar',
+    title: '700 Days of Data',
+    yAxisLabel: 'Value',
+    barColor: '#16a085'
+  }]
 });</code></pre>
     </div>
   </div>
@@ -363,17 +365,17 @@ Barchart.createBarchart({
     const data700 = generateDailyData(700);
     console.log(`Generated ${data700.length} data points`);
 
-    // Example 1: Two Charts (Daily Bar + High-Low)
-    Barchart.createMultiChart({
+    // Example 1: Two Panels (Daily Bar + High-Low)
+    Barchart.createChart({
       container: '#multiChart1',
-      data: data700,
       chartType: 'byDay',
       visibleWidth: 900,
       chartHeight: 180,
       barMinWidth: 6,
       scrollToEnd: true,
-      charts: [
+      timeSeries: [
         {
+          data: data700,
           renderType: 'bar',
           title: 'Daily Values',
           yAxisLabel: 'Value',
@@ -389,14 +391,14 @@ Barchart.createBarchart({
       ]
     });
 
-    // Example 2: Three Charts with Monthly Aggregation
-    Barchart.createMultiChart({
+    // Example 2: Three Panels with Monthly Aggregation
+    Barchart.createChart({
       container: '#multiChart2',
       data: data700,
       chartType: 'byMonth',
       visibleWidth: 900,
       chartHeight: 150,
-      charts: [
+      timeSeries: [
         {
           renderType: 'bar',
           title: 'Monthly Average',
@@ -420,15 +422,15 @@ Barchart.createBarchart({
     });
 
     // Example 3: Weekly High-Low
-    Barchart.createMultiChart({
+    Barchart.createChart({
       container: '#multiChart3',
-      data: data700,
       chartType: 'byWeek',
       visibleWidth: 900,
       chartHeight: 200,
       barMinWidth: 10,
-      charts: [
+      timeSeries: [
         {
+          data: data700,
           renderType: 'high-low',
           title: 'Weekly Value Range (~100 weeks)',
           yAxisLabel: 'Range',
@@ -440,18 +442,20 @@ Barchart.createBarchart({
       ]
     });
 
-    // Example 4: Single Chart API
-    Barchart.createBarchart({
+    // Example 4: Single Chart using unified API
+    Barchart.createChart({
       container: '#singleChart',
-      data: data700,
       chartType: 'byDay',
-      renderType: 'bar',
-      width: 900,
-      height: 300,
-      title: '700 Days of Data (Single Chart API)',
-      yAxisLabel: 'Value',
+      visibleWidth: 900,
+      chartHeight: 260,
       barMinWidth: 5,
-      barColor: '#16a085'
+      timeSeries: [{
+        data: data700,
+        renderType: 'bar',
+        title: '700 Days of Data (Single Chart API)',
+        yAxisLabel: 'Value',
+        barColor: '#16a085'
+      }]
     });
   </script>
 </body>

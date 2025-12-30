@@ -27,13 +27,17 @@
   // ...more data
 ];
 
-createBarchart({
+Barchart.createChart({
   container: '#chart1',
-  data: dailyData,
   chartType: 'byDay',
-  renderType: 'bar',
-  title: 'Daily Values',
-  yAxisLabel: 'Value'
+  visibleWidth: 750,
+  chartHeight: 310,
+  timeSeries: [{
+    data: dailyData,
+    renderType: 'bar',
+    title: 'Daily Values',
+    yAxisLabel: 'Value'
+  }]
 });</code></pre>
     </div>
   </div>
@@ -47,13 +51,17 @@ createBarchart({
     <div class="code-block" id="code2">
       <pre><code>const yearData = generateYearData(2024);
 
-createBarchart({
+Barchart.createChart({
   container: '#chart2',
-  data: yearData,
   chartType: 'byMonth',
-  renderType: 'bar',
-  title: 'Monthly Averages 2024',
-  yAxisLabel: 'Average Value'
+  visibleWidth: 800,
+  chartHeight: 310,
+  timeSeries: [{
+    data: yearData,
+    renderType: 'bar',
+    title: 'Monthly Averages 2024',
+    yAxisLabel: 'Average Value'
+  }]
 });</code></pre>
     </div>
   </div>
@@ -68,13 +76,17 @@ createBarchart({
       <pre><code>// Generate a full year of data for all 4 quarters
 const fullYearData = generateYearData(2024);
 
-createBarchart({
+Barchart.createChart({
   container: '#chart3',
-  data: fullYearData,
   chartType: 'byWeek',
-  renderType: 'bar',
-  title: 'Weekly Averages 2024 - With Quarter Labels',
-  yAxisLabel: 'Average Value'
+  visibleWidth: 1000,
+  chartHeight: 310,
+  timeSeries: [{
+    data: fullYearData,
+    renderType: 'bar',
+    title: 'Weekly Averages 2024 - With Quarter Labels',
+    yAxisLabel: 'Average Value'
+  }]
 });</code></pre>
     </div>
   </div>
@@ -86,14 +98,17 @@ createBarchart({
     <div class="chart-container" id="chart4"></div>
     <button class="code-toggle" onclick="toggleCode('code4')">Show Code</button>
     <div class="code-block" id="code4">
-      <pre><code>createBarchart({
+      <pre><code>Barchart.createChart({
   container: '#chart4',
-  data: monthData,
   chartType: 'byWeekday',
-  renderType: 'bar',
-  title: 'Average by Day of Week',
-  yAxisLabel: 'Average Value',
-  width: 500
+  visibleWidth: 500,
+  chartHeight: 310,
+  timeSeries: [{
+    data: monthData,
+    renderType: 'bar',
+    title: 'Average by Day of Week',
+    yAxisLabel: 'Average Value'
+  }]
 });</code></pre>
     </div>
   </div>
@@ -105,14 +120,17 @@ createBarchart({
     <div class="chart-container" id="chart5"></div>
     <button class="code-toggle" onclick="toggleCode('code5')">Show Code</button>
     <div class="code-block" id="code5">
-      <pre><code>createBarchart({
+      <pre><code>Barchart.createChart({
   container: '#chart5',
-  data: multiYearData,
   chartType: 'byYear',
-  renderType: 'bar',
-  title: 'Yearly Averages 2020-2025',
-  yAxisLabel: 'Average Value',
-  width: 500
+  visibleWidth: 500,
+  chartHeight: 310,
+  timeSeries: [{
+    data: multiYearData,
+    renderType: 'bar',
+    title: 'Yearly Averages 2020-2025',
+    yAxisLabel: 'Average Value'
+  }]
 });</code></pre>
     </div>
   </div>
@@ -124,13 +142,17 @@ createBarchart({
     <div class="chart-container" id="chart6"></div>
     <button class="code-toggle" onclick="toggleCode('code6')">Show Code</button>
     <div class="code-block" id="code6">
-      <pre><code>createBarchart({
+      <pre><code>Barchart.createChart({
   container: '#chart6',
-  data: yearData,
   chartType: 'byMonth',
-  renderType: 'high-low',
-  title: 'Monthly Range with Average',
-  yAxisLabel: 'Value Range'
+  visibleWidth: 800,
+  chartHeight: 310,
+  timeSeries: [{
+    data: yearData,
+    renderType: 'high-low',
+    title: 'Monthly Range with Average',
+    yAxisLabel: 'Value Range'
+  }]
 });</code></pre>
     </div>
   </div>
@@ -149,13 +171,17 @@ createBarchart({
   // ...more data
 ];
 
-createBarchart({
+Barchart.createChart({
   container: '#chart7',
-  data: temperatureData,
   chartType: 'byDay',
-  renderType: 'high-low',
-  title: 'Daily Temperature Range',
-  yAxisLabel: 'Temperature (°C)'
+  visibleWidth: 700,
+  chartHeight: 310,
+  timeSeries: [{
+    data: temperatureData,
+    renderType: 'high-low',
+    title: 'Daily Temperature Range',
+    yAxisLabel: 'Temperature (°C)'
+  }]
 });</code></pre>
     </div>
   </div>
@@ -173,13 +199,17 @@ createBarchart({
   // ...more data
 ];
 
-createBarchart({
+Barchart.createChart({
   container: '#chart8',
-  data: stockData,
   chartType: 'byWeek',
-  renderType: 'high-low',
-  title: 'Weekly Stock Price Range',
-  yAxisLabel: 'Price ($)'
+  visibleWidth: 600,
+  chartHeight: 310,
+  timeSeries: [{
+    data: stockData,
+    renderType: 'high-low',
+    title: 'Weekly Stock Price Range',
+    yAxisLabel: 'Price ($)'
+  }]
 });</code></pre>
     </div>
   </div>
@@ -218,29 +248,57 @@ console.log('Aggregated data:', aggregatedByMonth);</code></pre>
   <!-- Example 10: Staggered/Multi-Series Chart -->
   <div class="chart-section">
     <h2>10. Staggered/Multi-Series Bar Chart</h2>
-    <p>Multiple series displayed as staggered bars for each x-axis position. Each data point contains an array of values with corresponding labels.</p>
+    <p>Multiple series displayed as staggered bars for each x-axis position. Each series has its own <code>{ date, value }</code> data array.</p>
     <div class="chart-container" id="chart10"></div>
     <button class="code-toggle" onclick="toggleCode('code10')">Show Code</button>
     <div class="code-block" id="code10">
-      <pre><code>// Data with multiple values per date
-const staggeredData = [
-  { date: '2025-01-01', values: [42, 3, 1, 2] },
-  { date: '2025-01-02', values: [48, 3, 2, 0] },
-  { date: '2025-01-03', values: [35, 2, null, 1] },
-  { date: '2025-01-04', values: [55, 4, 3, 2] },
-  { date: '2025-01-05', values: [62, 5, 2, 3] }
+      <pre><code>// Each series has its own data array with { date, value } format
+const priceData = [
+  { date: '2025-01-01', value: 42 },
+  { date: '2025-01-02', value: 48 },
+  { date: '2025-01-03', value: 35 },
+  { date: '2025-01-04', value: 55 },
+  { date: '2025-01-05', value: 62 }
 ];
 
-createBarchart({
+const feeData = [
+  { date: '2025-01-01', value: 3 },
+  { date: '2025-01-02', value: 3 },
+  { date: '2025-01-03', value: 2 },
+  { date: '2025-01-04', value: 4 },
+  { date: '2025-01-05', value: 5 }
+];
+
+const taxData = [
+  { date: '2025-01-01', value: 1 },
+  { date: '2025-01-02', value: 2 },
+  // date 3 missing (null)
+  { date: '2025-01-04', value: 3 },
+  { date: '2025-01-05', value: 2 }
+];
+
+const extraData = [
+  { date: '2025-01-01', value: 2 },
+  { date: '2025-01-02', value: 0 },
+  { date: '2025-01-03', value: 1 },
+  { date: '2025-01-04', value: 2 },
+  { date: '2025-01-05', value: 3 }
+];
+
+Barchart.createChart({
   container: '#chart10',
-  data: staggeredData,
   chartType: 'byDay',
   renderType: 'staggered',
   title: 'Price Breakdown by Day',
   yAxisLabel: 'Amount ($)',
-  yAxisLabels: ['Price ($)', 'Fee', 'Tax', 'Extra'],
-  width: 700,
-  height: 350
+  visibleWidth: 700,
+  chartHeight: 310,
+  timeSeries: [
+    { data: priceData, label: 'Price ($)', color: '#4a90d9' },
+    { data: feeData, label: 'Fee', color: '#e74c3c' },
+    { data: taxData, label: 'Tax', color: '#2ecc71' },
+    { data: extraData, label: 'Extra', color: '#f39c12' }
+  ]
 });</code></pre>
     </div>
   </div>
@@ -248,29 +306,25 @@ createBarchart({
   <!-- Example 11: Stacked Bar Chart -->
   <div class="chart-section">
     <h2>11. Stacked Bar Chart</h2>
-    <p>Multiple series stacked on top of each other for each x-axis position. Same data format as staggered, but bars are vertically stacked to show totals.</p>
+    <p>Multiple series stacked on top of each other for each x-axis position. Same per-series data format as staggered, but bars are vertically stacked to show totals.</p>
     <div class="chart-container" id="chart11"></div>
     <button class="code-toggle" onclick="toggleCode('code11')">Show Code</button>
     <div class="code-block" id="code11">
-      <pre><code>// Same data format as staggered chart
-const stackedData = [
-  { date: '2025-01-01', values: [42, 3, 1, 2] },
-  { date: '2025-01-02', values: [48, 3, 2, 0] },
-  { date: '2025-01-03', values: [35, 2, null, 1] },
-  { date: '2025-01-04', values: [55, 4, 3, 2] },
-  { date: '2025-01-05', values: [62, 5, 2, 3] }
-];
-
-createBarchart({
+      <pre><code>// Same per-series data format as staggered chart
+Barchart.createChart({
   container: '#chart11',
-  data: stackedData,
   chartType: 'byDay',
   renderType: 'stacked',  // Use 'stacked' instead of 'staggered'
   title: 'Total Price Breakdown by Day (Stacked)',
   yAxisLabel: 'Total Amount ($)',
-  yAxisLabels: ['Price ($)', 'Fee', 'Tax', 'Extra'],
-  width: 700,
-  height: 350
+  visibleWidth: 700,
+  chartHeight: 310,
+  timeSeries: [
+    { data: priceData, label: 'Price ($)', color: '#4a90d9' },
+    { data: feeData, label: 'Fee', color: '#e74c3c' },
+    { data: taxData, label: 'Tax', color: '#2ecc71' },
+    { data: extraData, label: 'Extra', color: '#f39c12' }
+  ]
 });</code></pre>
     </div>
   </div>
@@ -386,103 +440,118 @@ createBarchart({
     ];
 
     // Example 1: Daily Bar Chart with Custom Tooltip
-    Barchart.createBarchart({
+    Barchart.createChart({
       container: '#chart1',
-      data: dailyData,
       chartType: 'byDay',
-      renderType: 'bar',
-      title: 'Daily Values - January 2025',
-      yAxisLabel: 'Value',
-      width: 750,
-      height: 350,
-      // Custom tooltip formatter example
-      tooltipFormatter: (data, config) => {
-        return `<strong>📊 Daily Requests</strong><br>Date: ${data.date}<br>Requests: ${data.value}`;
-      }
+      visibleWidth: 750,
+      chartHeight: 310,
+      timeSeries: [{
+        data: dailyData,
+        renderType: 'bar',
+        title: 'Daily Values - January 2025',
+        yAxisLabel: 'Value',
+        tooltipFormatter: (data, config) => {
+          return `<strong>📊 Daily Requests</strong><br>Date: ${data.date}<br>Requests: ${data.value}`;
+        }
+      }]
     });
 
     // Example 2: Monthly Bar Chart
-    Barchart.createBarchart({
+    Barchart.createChart({
       container: '#chart2',
-      data: yearData,
       chartType: 'byMonth',
-      renderType: 'bar',
-      title: 'Monthly Averages 2024',
-      yAxisLabel: 'Average Value',
-      width: 800,
-      height: 350
+      visibleWidth: 800,
+      chartHeight: 310,
+      timeSeries: [{
+        data: yearData,
+        renderType: 'bar',
+        title: 'Monthly Averages 2024',
+        yAxisLabel: 'Average Value'
+      }]
     });
 
     // Example 3: Weekly Bar Chart with Full Year (demonstrates quarter labels)
-    Barchart.createBarchart({
+    Barchart.createChart({
       container: '#chart3',
-      data: yearData,  // Full year of data to show all 4 quarters
       chartType: 'byWeek',
-      renderType: 'bar',
-      title: 'Weekly Averages 2024 - With Quarter Labels',
-      yAxisLabel: 'Average Value',
-      width: 1000,
-      height: 350
+      visibleWidth: 1000,
+      chartHeight: 310,
+      timeSeries: [{
+        data: yearData,
+        renderType: 'bar',
+        title: 'Weekly Averages 2024 - With Quarter Labels',
+        yAxisLabel: 'Average Value'
+      }]
     });
 
     // Example 4: Weekday Bar Chart
-    Barchart.createBarchart({
+    Barchart.createChart({
       container: '#chart4',
-      data: monthData,
       chartType: 'byWeekday',
-      renderType: 'bar',
-      title: 'Average by Day of Week',
-      yAxisLabel: 'Average Value',
-      width: 500,
-      height: 350
+      visibleWidth: 500,
+      chartHeight: 310,
+      timeSeries: [{
+        data: monthData,
+        renderType: 'bar',
+        title: 'Average by Day of Week',
+        yAxisLabel: 'Average Value'
+      }]
     });
 
     // Example 5: Yearly Bar Chart
-    Barchart.createBarchart({
+    Barchart.createChart({
       container: '#chart5',
-      data: multiYearData,
       chartType: 'byYear',
-      renderType: 'bar',
-      title: 'Yearly Averages 2020-2025',
-      yAxisLabel: 'Average Value',
-      width: 500,
-      height: 350
+      visibleWidth: 500,
+      chartHeight: 310,
+      timeSeries: [{
+        data: multiYearData,
+        renderType: 'bar',
+        title: 'Yearly Averages 2020-2025',
+        yAxisLabel: 'Average Value'
+      }]
     });
 
     // Example 6: Monthly High-Low Chart
-    Barchart.createBarchart({
+    Barchart.createChart({
       container: '#chart6',
-      data: yearData,
       chartType: 'byMonth',
-      renderType: 'high-low',
-      title: 'Monthly Range with Average - 2024',
-      yAxisLabel: 'Value Range',
-      width: 800,
-      height: 350
+      visibleWidth: 800,
+      chartHeight: 310,
+      timeSeries: [{
+        data: yearData,
+        renderType: 'high-low',
+        title: 'Monthly Range with Average - 2024',
+        yAxisLabel: 'Value Range'
+      }]
     });
 
     // Example 7: Daily High-Low (Temperature)
-    Barchart.createBarchart({
+    Barchart.createChart({
       container: '#chart7',
-      data: temperatureData,
       chartType: 'byDay',
-      renderType: 'high-low',
-      title: 'Daily Temperature Range - January 2025',
-      yAxisLabel: 'Temperature (°C)',
-      width: 700,
-      height: 350
+      visibleWidth: 700,
+      chartHeight: 310,
+      timeSeries: [{
+        data: temperatureData,
+        renderType: 'high-low',
+        title: 'Daily Temperature Range - January 2025',
+        yAxisLabel: 'Temperature (°C)'
+      }]
     });
 
     // Example 8: Weekly High-Low (Stock)
-    Barchart.createBarchart({
+    Barchart.createChart({
       container: '#chart8',
-      data: stockData,
       chartType: 'byWeek',
-      renderType: 'high-low',
-      title: 'Weekly Stock Price Range - January 2025',
-      yAxisLabel: 'Price ($)',
-      width: 600,
-      height: 350
+      visibleWidth: 600,
+      chartHeight: 310,
+      timeSeries: [{
+        data: stockData,
+        renderType: 'high-low',
+        title: 'Weekly Stock Price Range - January 2025',
+        yAxisLabel: 'Price ($)'
+      }]
     });
 
     // Example 9: Demonstrate aggregates() function
@@ -502,54 +571,103 @@ createBarchart({
       JSON.stringify(aggregatedByMonth, null, 2).replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
 
     // Also create a chart with the aggregated data
-    Barchart.createBarchart({
+    Barchart.createChart({
       container: '#chart9',
-      data: plainData,
       chartType: 'byMonth',
-      renderType: 'high-low',
-      title: 'Aggregated from Plain Data (byMonth)',
-      yAxisLabel: 'Value',
-      width: 500,
-      height: 300
+      visibleWidth: 500,
+      chartHeight: 260,
+      timeSeries: [{
+        data: plainData,
+        renderType: 'high-low',
+        title: 'Aggregated from Plain Data (byMonth)',
+        yAxisLabel: 'Value'
+      }]
     });
 
-    // Example 10: Staggered/Multi-Series Chart
-    const staggeredData = [
-      { date: '2025-01-01', values: [42, 3, 1, 2] },
-      { date: '2025-01-02', values: [48, 3, 2, 0] },
-      { date: '2025-01-03', values: [35, 2, null, 1] },
-      { date: '2025-01-04', values: [55, 4, 3, 2] },
-      { date: '2025-01-05', values: [62, 5, 2, 3] },
-      { date: '2025-01-06', values: [58, 4, 1, 2] },
-      { date: '2025-01-07', values: [45, 3, 2, 1] },
-      { date: '2025-01-08', values: [70, 6, 4, 3] },
-      { date: '2025-01-09', values: [52, 4, 2, 2] },
-      { date: '2025-01-10', values: [65, 5, 3, 2] }
+    // Example 10: Staggered/Multi-Series Chart (each series has its own data)
+    const priceData = [
+      { date: '2025-01-01', value: 42 },
+      { date: '2025-01-02', value: 48 },
+      { date: '2025-01-03', value: 35 },
+      { date: '2025-01-04', value: 55 },
+      { date: '2025-01-05', value: 62 },
+      { date: '2025-01-06', value: 58 },
+      { date: '2025-01-07', value: 45 },
+      { date: '2025-01-08', value: 70 },
+      { date: '2025-01-09', value: 52 },
+      { date: '2025-01-10', value: 65 }
     ];
 
-    Barchart.createBarchart({
+    const feeData = [
+      { date: '2025-01-01', value: 3 },
+      { date: '2025-01-02', value: 3 },
+      { date: '2025-01-03', value: 2 },
+      { date: '2025-01-04', value: 4 },
+      { date: '2025-01-05', value: 5 },
+      { date: '2025-01-06', value: 4 },
+      { date: '2025-01-07', value: 3 },
+      { date: '2025-01-08', value: 6 },
+      { date: '2025-01-09', value: 4 },
+      { date: '2025-01-10', value: 5 }
+    ];
+
+    const taxData = [
+      { date: '2025-01-01', value: 1 },
+      { date: '2025-01-02', value: 2 },
+      // date 3 intentionally missing (will be null)
+      { date: '2025-01-04', value: 3 },
+      { date: '2025-01-05', value: 2 },
+      { date: '2025-01-06', value: 1 },
+      { date: '2025-01-07', value: 2 },
+      { date: '2025-01-08', value: 4 },
+      { date: '2025-01-09', value: 2 },
+      { date: '2025-01-10', value: 3 }
+    ];
+
+    const extraData = [
+      { date: '2025-01-01', value: 2 },
+      { date: '2025-01-02', value: 0 },
+      { date: '2025-01-03', value: 1 },
+      { date: '2025-01-04', value: 2 },
+      { date: '2025-01-05', value: 3 },
+      { date: '2025-01-06', value: 2 },
+      { date: '2025-01-07', value: 1 },
+      { date: '2025-01-08', value: 3 },
+      { date: '2025-01-09', value: 2 },
+      { date: '2025-01-10', value: 2 }
+    ];
+
+    Barchart.createChart({
       container: '#chart10',
-      data: staggeredData,
       chartType: 'byDay',
       renderType: 'staggered',
       title: 'Price Breakdown by Day',
       yAxisLabel: 'Amount ($)',
-      yAxisLabels: ['Price ($)', 'Fee', 'Tax', 'Extra'],
-      width: 700,
-      height: 350
+      visibleWidth: 700,
+      chartHeight: 310,
+      timeSeries: [
+        { data: priceData, label: 'Price ($)', color: '#4a90d9' },
+        { data: feeData, label: 'Fee', color: '#e74c3c' },
+        { data: taxData, label: 'Tax', color: '#2ecc71' },
+        { data: extraData, label: 'Extra', color: '#f39c12' }
+      ]
     });
 
     // Example 11: Stacked Bar Chart (same data, stacked rendering)
-    Barchart.createBarchart({
+    Barchart.createChart({
       container: '#chart11',
-      data: staggeredData,
       chartType: 'byDay',
       renderType: 'stacked',
       title: 'Total Price Breakdown by Day (Stacked)',
       yAxisLabel: 'Total Amount ($)',
-      yAxisLabels: ['Price ($)', 'Fee', 'Tax', 'Extra'],
-      width: 700,
-      height: 350
+      visibleWidth: 700,
+      chartHeight: 310,
+      timeSeries: [
+        { data: priceData, label: 'Price ($)', color: '#4a90d9' },
+        { data: feeData, label: 'Fee', color: '#e74c3c' },
+        { data: taxData, label: 'Tax', color: '#2ecc71' },
+        { data: extraData, label: 'Extra', color: '#f39c12' }
+      ]
     });
   </script>
 </body>

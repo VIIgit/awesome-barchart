@@ -36,12 +36,14 @@ const data = [
   { date: '2025-01-03', value: 35 }
 ];
 
-Barchart.createBarchart({
+Barchart.createChart({
   container: '#myChart',
-  data: data,
   chartType: 'byDay',
-  renderType: 'bar',
-  title: 'My Chart'
+  timeseries: [{
+    data: data,
+    renderType: 'bar',
+    title: 'My Chart'
+  }]
 });
 </script>
 ```
@@ -52,14 +54,14 @@ Barchart.createBarchart({
 <div id="multiChart"></div>
 
 <script>
-Barchart.createMultiChart({
+Barchart.createChart({
   container: '#multiChart',
-  data: data,
   chartType: 'byDay',
   visibleWidth: 900,
   chartHeight: 180,
-  charts: [
+  timeseries: [
     {
+      data: data,  // Data in first timeseries, inherited by others
       renderType: 'bar',
       title: 'Daily Values',
       yAxisLabel: 'Value',
@@ -78,65 +80,51 @@ Barchart.createMultiChart({
 
 ## API Reference
 
-### `Barchart.createBarchart(config)`
+### `Barchart.createChart(config)`
 
-Create a single chart.
+Create a chart with one or more timeseries (panels).
+
+#### Global Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `container` | string/element | null | CSS selector or DOM element |
-| `data` | array | [] | Array of data objects |
+| `timeseries` | array | [] | **Required.** Array of timeseries configurations (each with its own data) |
 | `chartType` | string | 'byDay' | Grouping: 'byDay', 'byWeek', 'byMonth', 'byWeekday', 'byYear' |
-| `renderType` | string | 'bar' | 'bar' or 'high-low' |
-| `width` | number | 800 | Visible width in pixels |
-| `height` | number | 400 | Chart height in pixels |
+| `visibleWidth` / `width` | number | 800 | Visible width in pixels |
+| `chartHeight` / `height` | number | 200/400 | Height per chart panel |
 | `margin` | object | {...} | Chart margins |
-| `barColor` | string | '#4a90d9' | Bar fill color |
-| `highLowColor` | string | '#2c5aa0' | High-low bar color |
-| `avgMarkerColor` | string | '#ff6b6b' | Average marker color |
 | `barMinWidth` | number | 8 | Minimum bar width (enables scrolling) |
 | `showTooltip` | boolean | true | Show tooltips on hover |
 | `showGrid` | boolean | true | Show grid lines |
-| `title` | string | '' | Chart title |
-| `yAxisLabel` | string | '' | Y-axis label |
 
-### `Barchart.createMultiChart(config)`
 
-Create multiple charts with a shared x-axis.
+#### Timeseries Options
+
+Each item in the `timeseries` array should have:
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `container` | string/element | null | CSS selector or DOM element |
-| `data` | array/array[] | [] | Array of data objects (shared by all charts) or array of arrays for per-chart data |
-| `charts` | array | [] | Array of chart configurations. Each chart can have its own data set and render type. |
-| `chartType` | string | 'byDay' | Shared x-axis grouping |
-| `visibleWidth` | number | 800 | Visible width (scrolls if content exceeds) |
-| `chartHeight` | number | 200 | Height per chart |
-| `margin` | object | {...} | Shared margins |
-| `barMinWidth` | number | 8 | Minimum bar width |
-| `showTooltip` | boolean | true | Show tooltips |
-| `showGrid` | boolean | true | Show grid lines |
+| `data` | array | [] | **Required.** Data array for this timeseries |
+| `renderType` | string | 'bar' | 'bar', 'high-low', 'staggered', or 'stacked' |
+| `title` | string | '' | Chart panel title |
+| `yAxisLabel` | string | '' | Y-axis label |
+| `barColor` | string | '#4a90d9' | Bar fill color |
+| `highLowColor` | string | '#2c5aa0' | High-low bar color |
+| `avgMarkerColor` | string | '#ff6b6b' | Average marker color |
+| `yAxisScale` | string | 'linear' | 'linear' or 'log10' |
+| `yAxisFormat` | string | 'none' | 'auto', 'K', 'M', 'B', 'none', or custom |
+| `yAxisStartAtZero` | boolean | true | Start y-axis at zero |
 
-
-#### Per-Chart Data and Type
-
-Each chart in the `charts` array can have:
-
-- `renderType`: 'bar' or 'high-low' (can be different for each chart)
-- `data`: (optional) Array of data objects for this chart (overrides global `data`)
-- `title`: Chart title
-- `yAxisLabel`: Y-axis label
-- `barColor`: Bar color (for 'bar' type)
-- `highLowColor`: Range bar color (for 'high-low' type)
-- `avgMarkerColor`: Average marker color
+**Note:** When multiple timeseries share the same data, only the first timeseries needs `data`. Subsequent timeseries without `data` will inherit from the first timeseries.
 
 #### Synchronized Hover and Tooltips
 
-In multi-chart mode, hovering over a bar in any chart will highlight the corresponding bars and show tooltips across all charts, making it easy to compare values at the same x-axis position.
+In multi-timeseries (multi-panel) mode, hovering over a bar in any chart will highlight the corresponding bars and show tooltips across all charts, making it easy to compare values at the same x-axis position.
 
 #### Multi-Level X-Axis Labeling (byDay)
 
-When using `chartType: 'byDay'`, the x-axis displays multi-level labels: day, month, and year. This improves readability for long time series.
+When using `chartType: 'byDay'`, the x-axis displays multi-level labels: day, month, and year. This improves readability for long timeseries.
 
 ### `Barchart.aggregates(data, mode)`
 
@@ -184,6 +172,52 @@ const data = [
 |------|-------------|
 | `bar` | Standard bar chart |
 | `high-low` | Range visualization with high, low, and average marker |
+| `staggered` | Multiple timeseries as side-by-side bars for each x-position |
+| `stacked` | Multiple timeseries stacked vertically for each x-position |
+
+### Staggered/Stacked Charts
+
+For `staggered` and `stacked` render types, each timeseries has its own `{ date, value }` data array:
+
+```js
+// Each timeseries has its own data array
+const priceData = [
+  { date: '2025-01-01', value: 42 },
+  { date: '2025-01-02', value: 48 },
+  { date: '2025-01-03', value: 35 }
+];
+
+const feeData = [
+  { date: '2025-01-01', value: 3 },
+  { date: '2025-01-02', value: 3 },
+  { date: '2025-01-03', value: 2 }
+];
+
+const taxData = [
+  { date: '2025-01-01', value: 1 },
+  { date: '2025-01-02', value: 2 },
+  // date 3 missing (will be null in chart)
+];
+
+Barchart.createChart({
+  container: '#staggered',
+  chartType: 'byDay',
+  renderType: 'staggered',  // or 'stacked'
+  title: 'Price Breakdown',
+  yAxisLabel: 'Amount ($)',
+  timeseries: [
+    { data: priceData, label: 'Price', color: '#4a90d9' },
+    { data: feeData, label: 'Fee', color: '#e74c3c' },
+    { data: taxData, label: 'Tax', color: '#2ecc71' }
+  ]
+});
+```
+
+**Notes:**
+- Each timeseries must have `data`, `label`, and optionally `color`
+- The library automatically merges all timeseries by date
+- Missing dates in a timeseries are treated as `null` values
+- Tooltip shows all timeseries values with their labels and totals
 
 ## Horizontal Scrolling
 
@@ -197,9 +231,9 @@ When data exceeds the visible width, the chart automatically enables horizontal 
 Configure scrolling behavior with `barMinWidth`:
 
 ```js
-Barchart.createBarchart({
+Barchart.createChart({
   // ...
-  width: 800,          // Visible width
+  visibleWidth: 800,   // Visible width
   barMinWidth: 6,      // Minimum pixels per bar
   // If data has 700 points and barMinWidth=6, content width = 700*6 = 4200px
   // This exceeds 800px, so scrolling is enabled
@@ -208,57 +242,63 @@ Barchart.createBarchart({
 
 ## Y-Axis and Advanced Options
 
+These options can be set at the global level or per-timeseries.
+
 | Option                | Type      | Default      | Description |
 |-----------------------|-----------|--------------|-------------|
 | `yAxisScale`          | string    | `'linear'`   | `'linear'` or `'log10'` for y-axis scaling |
-| `yAxisFormat`         | string    | `'none'`     | `'auto'`, `'K'`, `'M'`, `'B'`, `'none'`, or custom (e.g. `'0.0 %'` for percent formatting) |
-
-### Custom Percent Formatting
-
-You can use custom percent formats for the y-axis and tooltips by setting `yAxisFormat` to a pattern like `'0.0 %'`. For example, `'0.0 %'` will display values as percentages with one decimal place.
+| `yAxisFormat`         | string    | `'none'`     | `'auto'`, `'K'`, `'M'`, `'B'`, `'none'`, or custom (e.g. `'0.0 %'` for percent) |
 | `yAxisDecimals`       | number    | `2`          | Number of decimals for y-axis labels |
 | `useThousandSeparator`| boolean   | `true`       | Use thousand separators in y-axis labels |
 | `yAxisStartAtZero`    | boolean   | `true`       | If true, y-axis starts at 0; if false, starts at min data value |
 | `tooltipFormatter`    | function  | `null`       | Custom tooltip HTML formatter `(data, config) => string` |
 
+### Custom Percent Formatting
+
+You can use custom percent formats for the y-axis and tooltips by setting `yAxisFormat` to a pattern like `'0.0 %'`. For example, `'0.0 %'` will display values as percentages with one decimal place.
+
 ### Example: Log10 Scale and Custom Y-Axis
 
 ```js
-Barchart.createBarchart({
+Barchart.createChart({
   container: '#logChart',
-  data: myData,
-  yAxisScale: 'log10',
-  yAxisLabel: 'Logarithmic',
-  yAxisFormat: 'auto',
-  yAxisDecimals: 0,
-  yAxisStartAtZero: false,
-  showGrid: true
+  chartType: 'byDay',
+  showGrid: true,
+  timeseries: [{
+    data: myData,
+    renderType: 'bar',
+    yAxisLabel: 'Logarithmic',
+    yAxisScale: 'log10',
+    yAxisFormat: 'auto',
+    yAxisDecimals: 0,
+    yAxisStartAtZero: false
+  }]
 });
 ```
 
 
-### Multi-Chart Example with Per-Chart Data and Types
+### Multi-Timeseries Example with Per-Timeseries Data and Types
 
 ```js
-Barchart.createMultiChart({
+// Each timeseries has its own data
+const barData = [
+  { date: '2025-01-01', value: 10 },
+  { date: '2025-01-02', value: 20 }
+];
+const rangeData = [
+  { date: '2025-01-01', value: 5, highValue: 8, lowValue: 2 },
+  { date: '2025-01-02', value: 7, highValue: 10, lowValue: 4 }
+];
+
+Barchart.createChart({
   container: '#multi',
-  data: [
-    [
-      { date: '2025-01-01', value: 10 },
-      { date: '2025-01-02', value: 20 }
-    ],
-    [
-      { date: '2025-01-01', value: 5, highValue: 8, lowValue: 2 },
-      { date: '2025-01-02', value: 7, highValue: 10, lowValue: 4 }
-    ]
-  ],
-  charts: [
-    { renderType: 'bar', yAxisLabel: 'A', yAxisStartAtZero: true },
-    { renderType: 'high-low', yAxisLabel: 'B', yAxisScale: 'log10', yAxisStartAtZero: false }
-  ],
   chartType: 'byDay',
   visibleWidth: 1000,
-  chartHeight: 200
+  chartHeight: 200,
+  timeseries: [
+    { data: barData, renderType: 'bar', yAxisLabel: 'A', yAxisStartAtZero: true },
+    { data: rangeData, renderType: 'high-low', yAxisLabel: 'B', yAxisScale: 'log10', yAxisStartAtZero: false }
+  ]
 });
 ```
 
@@ -267,9 +307,9 @@ Barchart.createMultiChart({
 
 ## Examples
 
-- `examples/index.html` - Basic examples of all chart types
-- `examples/multi-chart.html` - Multi-chart with 700 data points
-- `examples/per-chart-data.html` - Multi-chart with per-chart data and types
+- `examples/index.html` - Basic examples of all chart types and render modes
+- `examples/multi-chart.html` - Multi-timeseries charts with 700 data points
+- `examples/per-chart-data.html` - Multi-timeseries with per-timeseries data and types
 
 ## File Structure
 

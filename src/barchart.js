@@ -1464,37 +1464,191 @@
   }
 
   // ============================================================================
-  // MULTI-CHART FUNCTION
+  // UNIFIED CHART FUNCTION
   // ============================================================================
 
   /**
-   * Create multiple charts with shared x-axis
-   * Each chart can have its own data array, or use shared data from config.data
+   * Create a chart with one or more timeSeries
+   * 
+   * Unified API that handles:
+   * - Single timeSeries bar/high-low charts
+   * - Multi-timeSeries staggered/stacked charts  
+   * - Multi-panel charts with different y-axes
+   * 
    * @param {Object} config - Configuration object
+   * @param {string|HTMLElement} config.container - Container element or selector
+   * @param {Array} config.data - Shared data array (can be overridden per-timeSeries)
+   * @param {string} config.chartType - X-axis grouping: 'byDay', 'byWeek', 'byMonth', 'byYear', 'byWeekday'
+   * @param {Array} config.timeSeries - Array of timeSeries configurations
+   * @param {number} [config.visibleWidth=800] - Visible chart width
+   * @param {number} [config.chartHeight=200] - Height per chart panel
+   * @param {Object} [config.margin] - Chart margins
+   * @param {number} [config.barMinWidth=8] - Minimum bar width
+   * @param {boolean} [config.showTooltip=true] - Show tooltips
+   * @param {boolean} [config.showGrid=true] - Show grid lines
+   * @param {boolean} [config.scrollToEnd=false] - Initially scroll to rightmost bar
    * @returns {HTMLElement} The chart container element
+   * 
+   * @example
+   * // Single timeSeries bar chart
+   * Barchart.createChart({
+   *   container: '#chart',
+   *   data: dailyData,
+   *   chartType: 'byDay',
+   *   timeSeries: [{
+   *     renderType: 'bar',
+   *     title: 'Daily Values',
+   *     yAxisLabel: 'Value'
+   *   }]
+   * });
+   * 
+   * @example
+   * // Multi-timeSeries staggered chart
+   * Barchart.createChart({
+   *   container: '#chart',
+   *   data: staggeredData,  // [{date, values: [v1, v2, ...]}]
+   *   chartType: 'byDay',
+   *   timeSeries: [
+   *     { label: 'Price', color: '#4a90d9' },
+   *     { label: 'Fee', color: '#e74c3c' },
+   *     { label: 'Tax', color: '#2ecc71' }
+   *   ],
+   *   renderType: 'staggered'
+   * });
+   * 
+   * @example
+   * // Multi-panel chart with different render types
+   * Barchart.createChart({
+   *   container: '#chart',
+   *   chartType: 'byDay',
+   *   timeSeries: [
+   *     { data: data1, renderType: 'bar', title: 'Requests', yAxisLabel: 'Count' },
+   *     { data: data2, renderType: 'high-low', title: 'Response Time', yAxisLabel: 'ms' }
+   *   ]
+   * });
    */
-  function createMultiChart(config) {
+  function createChart(config) {
     const defaults = {
       container: null,
-      data: [],            // Shared data (used if chart doesn't have its own data)
-      charts: [],          // Array of chart configs: [{ data, renderType, yAxisLabel, barColor, ... }, ...]
-      chartType: 'byDay',  // Shared x-axis grouping
-      visibleWidth: 800,   // Visible width (scrollable if content exceeds)
-      chartHeight: 200,    // Height per chart
+      timeSeries: [],          // Array of timeSeries configs (each with its own data)
+      chartType: 'byDay',      // Shared x-axis grouping
+      renderType: null,        // Top-level renderType for multi-series (staggered/stacked)
+      visibleWidth: 800,       // Visible width (scrollable if content exceeds)
+      chartHeight: 200,        // Height per chart panel
       margin: { top: 30, right: 10, bottom: 10, left: 70 },
-      barMinWidth: 8,      // Minimum bar width
+      barMinWidth: 8,          // Minimum bar width
       showTooltip: true,
       showGrid: true,
-      tooltipFormatter: null, // Custom tooltip formatter function: (data, chartConfig) => string|HTMLstring
-      scrollToEnd: false // Scroll initially to the rightmost bar
+      tooltipFormatter: null,  // Custom tooltip formatter: (data, seriesConfig) => string|HTML
+      scrollToEnd: false,      // Scroll initially to the rightmost bar
+      title: '',               // Chart title (for single-panel charts)
+      yAxisLabel: '',          // Y-axis label (for single-panel charts)
+      // Default series colors
+      colors: ['#4a90d9', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#e67e22']
     };
 
     const cfg = { ...defaults, ...config };
 
+    // Normalize series configuration
+    let normalizedSeries = [];
+    
+    // Check if this is a staggered/stacked chart (multi-timeSeries mode indicated by top-level renderType)
+    const isStaggeredOrStacked = cfg.renderType === 'staggered' || cfg.renderType === 'stacked';
+    
+    if (cfg.timeSeries && cfg.timeSeries.length > 0) {
+      if (isStaggeredOrStacked) {
+        // Multi-timeSeries mode (staggered/stacked): each timeSeries has its own { date, value } data array
+        // Merge all timeSeries data arrays into a combined format with values array
+        const seriesLabels = cfg.timeSeries.map(s => s.label || s.title || '');
+        const seriesColors = cfg.timeSeries.map((s, idx) => s.color || s.barColor || cfg.colors[idx % cfg.colors.length]);
+        
+        // Collect all dates from all timeSeries
+        const dateValueMap = new Map(); // date string -> { date, values: [] }
+        const seriesCount = cfg.timeSeries.length;
+        
+        cfg.timeSeries.forEach((s, seriesIdx) => {
+          const seriesData = s.data || [];
+          seriesData.forEach(d => {
+            const dateStr = d.date instanceof Date 
+              ? d.date.toISOString().split('T')[0] 
+              : new Date(d.date).toISOString().split('T')[0];
+            
+            if (!dateValueMap.has(dateStr)) {
+              // Initialize with nulls for all series
+              dateValueMap.set(dateStr, { date: dateStr, values: new Array(seriesCount).fill(null) });
+            }
+            // Set this series' value at the correct index
+            dateValueMap.get(dateStr).values[seriesIdx] = d.value;
+          });
+        });
+        
+        // Convert to array and sort by date
+        const chartData = Array.from(dateValueMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+        
+        normalizedSeries = [{
+          data: chartData,
+          renderType: cfg.renderType,
+          title: cfg.title || '',
+          yAxisLabel: cfg.yAxisLabel || '',
+          yAxisLabels: seriesLabels,
+          staggeredColors: seriesColors,
+          barColor: seriesColors[0],
+          highLowColor: '#2c5aa0',
+          avgMarkerColor: '#ff6b6b',
+          yAxisScale: cfg.yAxisScale || 'linear',
+          yAxisFormat: cfg.yAxisFormat || 'none',
+          yAxisDecimals: cfg.yAxisDecimals !== undefined ? cfg.yAxisDecimals : 2,
+          useThousandSeparator: cfg.useThousandSeparator !== undefined ? cfg.useThousandSeparator : true,
+          yAxisStartAtZero: cfg.yAxisStartAtZero !== undefined ? cfg.yAxisStartAtZero : true,
+          tooltipFormatter: cfg.tooltipFormatter
+        }];
+      } else {
+        // Check if this is a multi-panel chart (timeSeries with renderType indicates panels)
+        // or timeSeries with label/color only (legacy multi-timeSeries detection)
+        const hasSeriesRenderType = cfg.timeSeries.some(s => s.renderType);
+        const isMultiPanel = hasSeriesRenderType || cfg.timeSeries.every(s => s.data || s.renderType);
+        
+        if (isMultiPanel || cfg.timeSeries.some(s => s.renderType)) {
+          // Multi-panel mode: each timeSeries is a separate chart panel
+          // First timeSeries with data provides fallback for others
+          const firstSeriesWithData = cfg.timeSeries.find(s => s.data && s.data.length > 0);
+          const sharedData = firstSeriesWithData ? firstSeriesWithData.data : [];
+          
+          normalizedSeries = cfg.timeSeries.map((s, idx) => ({
+            data: s.data || sharedData,
+            renderType: s.renderType || 'bar',
+            title: s.title || '',
+            yAxisLabel: s.yAxisLabel || '',
+            yAxisLabels: s.yAxisLabels || s.labels || [],
+            barColor: s.barColor || s.color || cfg.colors[idx % cfg.colors.length],
+            highLowColor: s.highLowColor || s.color || '#2c5aa0',
+            avgMarkerColor: s.avgMarkerColor || '#ff6b6b',
+            staggeredColors: s.colors || s.staggeredColors || cfg.colors,
+            yAxisScale: s.yAxisScale || 'linear',
+            yAxisFormat: s.yAxisFormat || 'none',
+            yAxisDecimals: s.yAxisDecimals !== undefined ? s.yAxisDecimals : 2,
+            useThousandSeparator: s.useThousandSeparator !== undefined ? s.useThousandSeparator : true,
+            yAxisStartAtZero: s.yAxisStartAtZero !== undefined ? s.yAxisStartAtZero : true,
+            tooltipFormatter: s.tooltipFormatter || cfg.tooltipFormatter
+          }));
+        }
+      }
+    } else {
+      // No timeSeries provided - return early with warning
+      console.warn('Barchart: No timeSeries provided');
+      return null;
+    }
+
+    // Validate that we have data
+    if (normalizedSeries.length === 0 || !normalizedSeries[0].data || normalizedSeries[0].data.length === 0) {
+      console.warn('Barchart: No valid data in timeSeries');
+      return null;
+    }
+
     // Helper function to normalize and aggregate data for a single dataset
-    function processData(rawData, chartCfg) {
+    function processData(rawData, seriesCfg) {
       // For staggered/stacked charts, preserve the values array without filtering by value
-      if (chartCfg && (chartCfg.renderType === 'staggered' || chartCfg.renderType === 'stacked')) {
+      if (seriesCfg && (seriesCfg.renderType === 'staggered' || seriesCfg.renderType === 'stacked')) {
         return rawData.map(d => ({
           date: (d.date instanceof Date ? d.date : new Date(d.date)).toISOString().split('T')[0],
           values: d.values || []
@@ -1517,7 +1671,7 @@
         return aggregates(normalized, cfg.chartType);
       } else {
         return normalized.map(d => ({
-          date: d.date.toISOString().split('T')[0],
+          date: d.toISOString ? d.toISOString().split('T')[0] : d.date.toISOString().split('T')[0],
           value: d.value,
           highValue: d.highValue || d.value,
           lowValue: d.lowValue || d.value,
@@ -1526,45 +1680,28 @@
       }
     }
 
-    // Determine if we're using per-chart data or shared data
-    const hasPerChartData = cfg.charts.some(chart => chart.data && chart.data.length > 0);
-    
-    // Process shared data (for backwards compatibility and x-axis rendering)
+    // Process data for each series
     let sharedAggregatedData = [];
-    if (cfg.data && cfg.data.length > 0) {
-      // Use the first chart's config for processing shared data
-      sharedAggregatedData = processData(cfg.data, cfg.charts[0] || {});
-    }
-
-    // If using per-chart data, process each chart's data separately
-    const chartDataSets = [];
-    if (hasPerChartData) {
-      cfg.charts.forEach((chartCfg, index) => {
-        const chartData = chartCfg.data && chartCfg.data.length > 0 ? chartCfg.data : cfg.data;
-        const aggregated = processData(chartData, chartCfg);
-        chartDataSets.push(aggregated);
-        
-        // Use the first chart's data for x-axis if no shared data
-        if (index === 0 && sharedAggregatedData.length === 0) {
-          sharedAggregatedData = aggregated;
-        }
-      });
-    } else {
-      // All charts use the same shared data
-      cfg.charts.forEach((chartCfg) => {
-        // Re-process for each chart in case of different renderTypes
-        const aggregated = processData(cfg.data, chartCfg);
-        chartDataSets.push(aggregated);
-      });
-    }
+    const seriesDataSets = [];
+    
+    normalizedSeries.forEach((seriesCfg, index) => {
+      const seriesData = seriesCfg.data || [];
+      const aggregated = processData(seriesData, seriesCfg);
+      seriesDataSets.push(aggregated);
+      
+      // Use the first series' data for x-axis
+      if (index === 0) {
+        sharedAggregatedData = aggregated;
+      }
+    });
 
     // Validate we have data to render
     if (sharedAggregatedData.length === 0) {
-      console.warn('No valid data points provided');
+      console.warn('Barchart: No valid data points provided');
       return null;
     }
 
-    // Use the first chart's data length for bar count (all should be aligned)
+    // Use the first series' data length for bar count (all should be aligned)
     const aggregatedData = sharedAggregatedData;
 
     // Calculate dimensions
@@ -1591,27 +1728,27 @@
 
     // Collect hover data from all chart panels for synchronized hover
     const allChartHoverData = [];
-    const isMultiChart = cfg.charts.length > 1;
+    const isMultiPanel = normalizedSeries.length > 1;
 
-    // Create rows for each chart
-    cfg.charts.forEach((chartCfg, index) => {
+    // Create rows for each series (chart panel)
+    normalizedSeries.forEach((seriesCfg, index) => {
       const row = document.createElement('div');
       row.className = 'barchart-row';
 
       // Merge config
       const panelCfg = {
         ...cfg,
-        ...chartCfg,
+        ...seriesCfg,
         innerWidth,
         innerHeight: cfg.chartHeight,
         margin: cfg.margin
       };
 
-      // Use the per-chart data for this chart
-      const panelData = chartDataSets[index];
+      // Use the per-series data for this panel
+      const panelData = seriesDataSets[index];
 
-      // Pass multiChartMode=true if we have multiple charts
-      const { yAxisSvg, chartSvg, titleText, hoverData } = renderChartPanel(panelCfg, panelData, barStep, barWidth, tooltip, isMultiChart);
+      // Pass multiChartMode=true if we have multiple panels
+      const { yAxisSvg, chartSvg, titleText, hoverData } = renderChartPanel(panelCfg, panelData, barStep, barWidth, tooltip, isMultiPanel);
       
       // Store hover data for synchronized hover
       allChartHoverData.push(hoverData);
@@ -1628,7 +1765,7 @@
       chartAreaWrapper.style.width = (cfg.visibleWidth - cfg.margin.left) + 'px';
       chartAreaWrapper.style.position = 'relative';
       
-      // Add sticky centered title overlay if title exists (positioned above scroll container)
+      // Add sticky centered title overlay if title exists
       if (titleText) {
         const titleOverlay = document.createElement('div');
         titleOverlay.className = 'barchart-title-overlay';
@@ -1676,11 +1813,8 @@
     mainContainer.appendChild(xAxisRow);
     xAxisRow._scrollContainer = xAxisScrollContainer;
 
-    // Set up synchronized hover across all charts (multi-chart mode only)
-    if (isMultiChart && tooltip && allChartHoverData.length > 0) {
-      // Create a single hover overlay layer for the entire multi-chart container
-      // This captures mouse events and syncs hover across all charts
-      
+    // Set up synchronized hover across all panels (multi-panel mode only)
+    if (isMultiPanel && tooltip && allChartHoverData.length > 0) {
       // Get all chart scroll containers (excluding x-axis)
       const chartRows = Array.from(mainContainer.querySelectorAll('.barchart-row:not(.barchart-xaxis-row)'));
       
@@ -1693,7 +1827,7 @@
         const chartGroup = chartSvg.querySelector('g[transform]');
         if (!chartGroup) return;
         
-        // Create hover zones group for this chart
+        // Create hover zones group for this panel
         const hoverZonesGroup = createSVGElement('g', { class: 'hover-zones' });
         
         const hoverData = allChartHoverData[rowIndex];
@@ -1713,12 +1847,12 @@
           hoverZone.addEventListener('mouseenter', (e) => {
             const barCenterX = pos.barCenterX;
             
-            // Show hover indicators on ALL charts
+            // Show hover indicators on ALL panels
             allChartHoverData.forEach(chartHover => {
               chartHover.showHover(i, barCenterX);
             });
             
-            // Build combined tooltip with date header and all chart values
+            // Build combined tooltip with date header and all panel values
             const dateLabel = hoverData.aggregatedData[i]?.date || '';
             let tooltipContent = `<strong>${dateLabel}</strong><hr style="margin: 4px 0; border: none; border-top: 1px solid #ddd;">`;
             
@@ -1736,7 +1870,7 @@
           });
           
           hoverZone.addEventListener('mouseleave', () => {
-            // Hide hover indicators on ALL charts
+            // Hide hover indicators on ALL panels
             allChartHoverData.forEach(chartHover => {
               chartHover.hideHover();
             });
@@ -1848,84 +1982,11 @@
   }
 
   // ============================================================================
-  // SINGLE CHART FUNCTION (Wrapper for backwards compatibility)
-  // ============================================================================
-
-  /**
-   * Create a single barchart (uses multi-chart internally for consistency)
-   * @param {Object} config - Configuration object
-   * @returns {HTMLElement} The chart container element
-   */
-  function createBarchart(config) {
-    const defaults = {
-      container: null,
-      data: [],
-      chartType: 'byDay',
-      renderType: 'bar',
-      width: 800,
-      height: 400,
-      margin: { top: 40, right: 10, bottom: 10, left: 70 },
-      barColor: '#4a90d9',
-      highLowColor: '#2c5aa0',
-      avgMarkerColor: '#ff6b6b',
-      showTooltip: true,
-      showGrid: true,
-      title: '',
-      yAxisLabel: '',
-      yAxisLabels: [],        // For staggered charts: labels for each series
-      staggeredColors: ['#4a90d9', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#e67e22'],
-      xAxisLabel: '',
-      barMinWidth: 8,
-      yAxisScale: 'linear',   // 'linear' or 'log10'
-      yAxisFormat: 'none',    // 'none', 'auto', 'K', 'M', 'B', or custom pattern like '0.0 %'
-      yAxisDecimals: 2,       // Number of decimal places for formatted numbers
-      useThousandSeparator: true, // Whether to format numbers with thousand separators
-      yAxisStartAtZero: true, // Whether y-axis starts at 0 (true) or at min data value (false)
-      tooltipFormatter: null, // Custom tooltip formatter: (data, config) => string|HTML
-      scrollToEnd: false      // Scroll initially to the rightmost bar
-    };
-
-    const cfg = { ...defaults, ...config };
-
-    // Use multi-chart with single chart config
-    return createMultiChart({
-      container: cfg.container,
-      data: cfg.data,
-      chartType: cfg.chartType,
-      visibleWidth: cfg.width,
-      chartHeight: cfg.height - cfg.margin.top - cfg.margin.bottom,
-      margin: cfg.margin,
-      barMinWidth: cfg.barMinWidth,
-      showTooltip: cfg.showTooltip,
-      showGrid: cfg.showGrid,
-      tooltipFormatter: cfg.tooltipFormatter,
-      scrollToEnd: cfg.scrollToEnd,
-      charts: [{
-        renderType: cfg.renderType,
-        title: cfg.title,
-        yAxisLabel: cfg.yAxisLabel,
-        yAxisLabels: cfg.yAxisLabels,
-        staggeredColors: cfg.staggeredColors,
-        barColor: cfg.barColor,
-        highLowColor: cfg.highLowColor,
-        avgMarkerColor: cfg.avgMarkerColor,
-        yAxisScale: cfg.yAxisScale,
-        yAxisFormat: cfg.yAxisFormat,
-        yAxisDecimals: cfg.yAxisDecimals,
-        useThousandSeparator: cfg.useThousandSeparator,
-        yAxisStartAtZero: cfg.yAxisStartAtZero,
-        tooltipFormatter: cfg.tooltipFormatter
-      }]
-    });
-  }
-
-  // ============================================================================
   // PUBLIC API
   // ============================================================================
 
   return {
-    createBarchart,
-    createMultiChart,
+    createChart,
     aggregates,
     formatNumber,
     getWeek,

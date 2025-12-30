@@ -183,16 +183,16 @@
 const revenueData = generateRevenueData(365);
 const ordersData = generateOrdersData(365);
 
-// Create multi-chart with per-chart data
-Barchart.createMultiChart({
+// Create chart with per-series data
+Barchart.createChart({
   container: '#multiChart1',
-  // No shared data - each chart has its own
+  // No shared data - each series has its own
   chartType: 'byDay',
   visibleWidth: 900,
   chartHeight: 180,
   barMinWidth: 6,
   scrollToEnd: true,
-  charts: [
+  timeSeries: [
     {
       data: revenueData,  // First dataset
       renderType: 'bar',
@@ -226,14 +226,14 @@ Barchart.createMultiChart({
 const temperatureData = generateTemperatureData(180);
 const humidityData = generateHumidityData(180);
 
-Barchart.createMultiChart({
+Barchart.createChart({
   container: '#multiChart2',
   chartType: 'byDay',
   visibleWidth: 900,
   chartHeight: 160,
   barMinWidth: 8,
   scrollToEnd: true,
-  charts: [
+  timeSeries: [
     {
       data: temperatureData,
       renderType: 'high-low',
@@ -269,14 +269,14 @@ const priceData = generateStockPriceData(200);
 const volumeData = generateVolumeData(200);
 const rsiData = generateRSIData(200);
 
-Barchart.createMultiChart({
+Barchart.createChart({
   container: '#multiChart3',
   chartType: 'byDay',
   visibleWidth: 900,
   chartHeight: 140,
   barMinWidth: 6,
   scrollToEnd: true,
-  charts: [
+  timeSeries: [
     {
       data: priceData,
       renderType: 'high-low',
@@ -315,28 +315,27 @@ Barchart.createMultiChart({
 
     <button class="code-toggle" onclick="toggleCode('code4')">Show Code</button>
     <div class="code-block" id="code4">
-      <pre><code>// Shared data for charts that don't specify their own
+      <pre><code>// Shared data for multiple series
 const sharedData = generateDailyData(100);
-// Custom data for one specific chart
+// Custom data for one specific series
 const customData = generateCustomData(100);
 
-Barchart.createMultiChart({
+Barchart.createChart({
   container: '#multiChart4',
-  data: sharedData,  // Shared data as fallback
   chartType: 'byDay',
   visibleWidth: 900,
   chartHeight: 150,
   barMinWidth: 10,
-  charts: [
+  timeSeries: [
     {
-      // No data specified - uses shared data
+      data: sharedData,  // First series defines shared data
       renderType: 'bar',
       title: 'Using Shared Data',
       yAxisLabel: 'Value',
       barColor: '#4a90d9'
     },
     {
-      data: customData,  // This chart has its own data
+      data: customData,  // This series has its own data
       renderType: 'bar',
       title: 'Using Custom Data',
       yAxisLabel: 'Custom',
@@ -509,14 +508,14 @@ Barchart.createMultiChart({
     const revenueData = generateRevenueData(365);
     const ordersData = generateOrdersData(365);
 
-    Barchart.createMultiChart({
+    Barchart.createChart({
       container: '#multiChart1',
       chartType: 'byDay',
       visibleWidth: 900,
       chartHeight: 180,
       barMinWidth: 6,
       scrollToEnd: true,
-      charts: [
+      timeSeries: [
         {
           data: revenueData,
           renderType: 'bar',
@@ -540,14 +539,14 @@ Barchart.createMultiChart({
     const temperatureData = generateTemperatureData(180);
     const humidityData = generateHumidityData(180);
 
-    Barchart.createMultiChart({
+    Barchart.createChart({
       container: '#multiChart2',
       chartType: 'byDay',
       visibleWidth: 900,
       chartHeight: 160,
       barMinWidth: 8,
       scrollToEnd: true,
-      charts: [
+      timeSeries: [
         {
           data: temperatureData,
           renderType: 'high-low',
@@ -572,14 +571,14 @@ Barchart.createMultiChart({
     const volumeData = generateVolumeData(200);
     const rsiData = generateRSIData(200);
 
-    Barchart.createMultiChart({
+    Barchart.createChart({
       container: '#multiChart3',
       chartType: 'byDay',
       visibleWidth: 900,
       chartHeight: 140,
       barMinWidth: 6,
       scrollToEnd: true,
-      charts: [
+      timeSeries: [
         {
           data: priceData,
           renderType: 'high-low',
@@ -607,19 +606,19 @@ Barchart.createMultiChart({
       ]
     });
 
-    // Example 4: Mixed shared + per-chart data
+    // Example 4: Mixed shared + per-series data
     const sharedData = generateDailyData(100);
     const customData = generateCustomData(100);
 
-    Barchart.createMultiChart({
+    Barchart.createChart({
       container: '#multiChart4',
-      data: sharedData,
       chartType: 'byDay',
       visibleWidth: 900,
       chartHeight: 150,
       barMinWidth: 10,
-      charts: [
+      timeSeries: [
         {
+          data: sharedData,
           renderType: 'bar',
           title: 'Using Shared Data',
           yAxisLabel: 'Value',
