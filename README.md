@@ -107,8 +107,8 @@ Create multiple charts with a shared x-axis.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `container` | string/element | null | CSS selector or DOM element |
-| `data` | array | [] | Array of data objects (shared by all charts) |
-| `charts` | array | [] | Array of chart configurations |
+| `data` | array/array[] | [] | Array of data objects (shared by all charts) or array of arrays for per-chart data |
+| `charts` | array | [] | Array of chart configurations. Each chart can have its own data set and render type. |
 | `chartType` | string | 'byDay' | Shared x-axis grouping |
 | `visibleWidth` | number | 800 | Visible width (scrolls if content exceeds) |
 | `chartHeight` | number | 200 | Height per chart |
@@ -117,14 +117,26 @@ Create multiple charts with a shared x-axis.
 | `showTooltip` | boolean | true | Show tooltips |
 | `showGrid` | boolean | true | Show grid lines |
 
+
+#### Per-Chart Data and Type
+
 Each chart in the `charts` array can have:
 
-- `renderType`: 'bar' or 'high-low'
+- `renderType`: 'bar' or 'high-low' (can be different for each chart)
+- `data`: (optional) Array of data objects for this chart (overrides global `data`)
 - `title`: Chart title
 - `yAxisLabel`: Y-axis label
 - `barColor`: Bar color (for 'bar' type)
 - `highLowColor`: Range bar color (for 'high-low' type)
 - `avgMarkerColor`: Average marker color
+
+#### Synchronized Hover and Tooltips
+
+In multi-chart mode, hovering over a bar in any chart will highlight the corresponding bars and show tooltips across all charts, making it easy to compare values at the same x-axis position.
+
+#### Multi-Level X-Axis Labeling (byDay)
+
+When using `chartType: 'byDay'`, the x-axis displays multi-level labels: day, month, and year. This improves readability for long time series.
 
 ### `Barchart.aggregates(data, mode)`
 
@@ -199,7 +211,11 @@ Barchart.createBarchart({
 | Option                | Type      | Default      | Description |
 |-----------------------|-----------|--------------|-------------|
 | `yAxisScale`          | string    | `'linear'`   | `'linear'` or `'log10'` for y-axis scaling |
-| `yAxisFormat`         | string    | `'auto'`     | `'auto'`, `'K'`, `'M'`, `'B'`, `'none'` (number formatting) |
+| `yAxisFormat`         | string    | `'none'`     | `'auto'`, `'K'`, `'M'`, `'B'`, `'none'`, or custom (e.g. `'0.0 %'` for percent formatting) |
+
+### Custom Percent Formatting
+
+You can use custom percent formats for the y-axis and tooltips by setting `yAxisFormat` to a pattern like `'0.0 %'`. For example, `'0.0 %'` will display values as percentages with one decimal place.
 | `yAxisDecimals`       | number    | `2`          | Number of decimals for y-axis labels |
 | `useThousandSeparator`| boolean   | `true`       | Use thousand separators in y-axis labels |
 | `yAxisStartAtZero`    | boolean   | `true`       | If true, y-axis starts at 0; if false, starts at min data value |
@@ -220,17 +236,27 @@ Barchart.createBarchart({
 });
 ```
 
-### Multi-Chart Example with Per-Chart Options
+
+### Multi-Chart Example with Per-Chart Data and Types
 
 ```js
 Barchart.createMultiChart({
   container: '#multi',
-  data: myData,
+  data: [
+    [
+      { date: '2025-01-01', value: 10 },
+      { date: '2025-01-02', value: 20 }
+    ],
+    [
+      { date: '2025-01-01', value: 5, highValue: 8, lowValue: 2 },
+      { date: '2025-01-02', value: 7, highValue: 10, lowValue: 4 }
+    ]
+  ],
   charts: [
     { renderType: 'bar', yAxisLabel: 'A', yAxisStartAtZero: true },
     { renderType: 'high-low', yAxisLabel: 'B', yAxisScale: 'log10', yAxisStartAtZero: false }
   ],
-  chartType: 'byWeek',
+  chartType: 'byDay',
   visibleWidth: 1000,
   chartHeight: 200
 });
@@ -238,10 +264,12 @@ Barchart.createMultiChart({
 
 ---
 
+
 ## Examples
 
 - `examples/index.html` - Basic examples of all chart types
 - `examples/multi-chart.html` - Multi-chart with 700 data points
+- `examples/per-chart-data.html` - Multi-chart with per-chart data and types
 
 ## File Structure
 

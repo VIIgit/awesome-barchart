@@ -215,6 +215,66 @@ console.log('Aggregated data:', aggregatedByMonth);</code></pre>
     <div id="aggregation-output" style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 4px; font-family: monospace; font-size: 13px;"></div>
   </div>
 
+  <!-- Example 10: Staggered/Multi-Series Chart -->
+  <div class="chart-section">
+    <h2>10. Staggered/Multi-Series Bar Chart</h2>
+    <p>Multiple series displayed as staggered bars for each x-axis position. Each data point contains an array of values with corresponding labels.</p>
+    <div class="chart-container" id="chart10"></div>
+    <button class="code-toggle" onclick="toggleCode('code10')">Show Code</button>
+    <div class="code-block" id="code10">
+      <pre><code>// Data with multiple values per date
+const staggeredData = [
+  { date: '2025-01-01', values: [42, 3, 1, 2] },
+  { date: '2025-01-02', values: [48, 3, 2, 0] },
+  { date: '2025-01-03', values: [35, 2, null, 1] },
+  { date: '2025-01-04', values: [55, 4, 3, 2] },
+  { date: '2025-01-05', values: [62, 5, 2, 3] }
+];
+
+createBarchart({
+  container: '#chart10',
+  data: staggeredData,
+  chartType: 'byDay',
+  renderType: 'staggered',
+  title: 'Price Breakdown by Day',
+  yAxisLabel: 'Amount ($)',
+  yAxisLabels: ['Price ($)', 'Fee', 'Tax', 'Extra'],
+  width: 700,
+  height: 350
+});</code></pre>
+    </div>
+  </div>
+
+  <!-- Example 11: Stacked Bar Chart -->
+  <div class="chart-section">
+    <h2>11. Stacked Bar Chart</h2>
+    <p>Multiple series stacked on top of each other for each x-axis position. Same data format as staggered, but bars are vertically stacked to show totals.</p>
+    <div class="chart-container" id="chart11"></div>
+    <button class="code-toggle" onclick="toggleCode('code11')">Show Code</button>
+    <div class="code-block" id="code11">
+      <pre><code>// Same data format as staggered chart
+const stackedData = [
+  { date: '2025-01-01', values: [42, 3, 1, 2] },
+  { date: '2025-01-02', values: [48, 3, 2, 0] },
+  { date: '2025-01-03', values: [35, 2, null, 1] },
+  { date: '2025-01-04', values: [55, 4, 3, 2] },
+  { date: '2025-01-05', values: [62, 5, 2, 3] }
+];
+
+createBarchart({
+  container: '#chart11',
+  data: stackedData,
+  chartType: 'byDay',
+  renderType: 'stacked',  // Use 'stacked' instead of 'staggered'
+  title: 'Total Price Breakdown by Day (Stacked)',
+  yAxisLabel: 'Total Amount ($)',
+  yAxisLabels: ['Price ($)', 'Fee', 'Tax', 'Extra'],
+  width: 700,
+  height: 350
+});</code></pre>
+    </div>
+  </div>
+
   <script src="../src/barchart.js"></script>
   <script>
     // Toggle code visibility
@@ -451,6 +511,45 @@ console.log('Aggregated data:', aggregatedByMonth);</code></pre>
       yAxisLabel: 'Value',
       width: 500,
       height: 300
+    });
+
+    // Example 10: Staggered/Multi-Series Chart
+    const staggeredData = [
+      { date: '2025-01-01', values: [42, 3, 1, 2] },
+      { date: '2025-01-02', values: [48, 3, 2, 0] },
+      { date: '2025-01-03', values: [35, 2, null, 1] },
+      { date: '2025-01-04', values: [55, 4, 3, 2] },
+      { date: '2025-01-05', values: [62, 5, 2, 3] },
+      { date: '2025-01-06', values: [58, 4, 1, 2] },
+      { date: '2025-01-07', values: [45, 3, 2, 1] },
+      { date: '2025-01-08', values: [70, 6, 4, 3] },
+      { date: '2025-01-09', values: [52, 4, 2, 2] },
+      { date: '2025-01-10', values: [65, 5, 3, 2] }
+    ];
+
+    Barchart.createBarchart({
+      container: '#chart10',
+      data: staggeredData,
+      chartType: 'byDay',
+      renderType: 'staggered',
+      title: 'Price Breakdown by Day',
+      yAxisLabel: 'Amount ($)',
+      yAxisLabels: ['Price ($)', 'Fee', 'Tax', 'Extra'],
+      width: 700,
+      height: 350
+    });
+
+    // Example 11: Stacked Bar Chart (same data, stacked rendering)
+    Barchart.createBarchart({
+      container: '#chart11',
+      data: staggeredData,
+      chartType: 'byDay',
+      renderType: 'stacked',
+      title: 'Total Price Breakdown by Day (Stacked)',
+      yAxisLabel: 'Total Amount ($)',
+      yAxisLabels: ['Price ($)', 'Fee', 'Tax', 'Extra'],
+      width: 700,
+      height: 350
     });
   </script>
 </body>

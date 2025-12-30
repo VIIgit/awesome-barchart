@@ -370,6 +370,10 @@
    * @returns {string} HTML content for tooltip
    */
   function generateTooltipContent(d, cfg, numberFormat, numberDecimals, useThousandSeparator) {
+    const tableStyle = 'border-collapse:collapse;width:100%;';
+    const labelStyle = 'text-align:left;padding-right:10px;';
+    const valueStyle = 'text-align:right;font-weight:500;';
+    
     if (cfg.tooltipFormatter && typeof cfg.tooltipFormatter === 'function') {
       return cfg.tooltipFormatter(d, cfg);
     } else if (cfg.renderType === 'high-low') {
@@ -377,11 +381,31 @@
       const formattedLow = formatNumber(d.lowValue, numberFormat, numberDecimals, useThousandSeparator);
       const formattedAvg = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
       const title = cfg.title ? `<strong>${cfg.title}</strong><br>` : '';
-      return `${title}High: ${formattedHigh}<br>Low: ${formattedLow}<br>Avg: ${formattedAvg}`;
+      return `${title}<table style="${tableStyle}"><tr><td style="${labelStyle}">High:</td><td style="${valueStyle}">${formattedHigh}</td></tr><tr><td style="${labelStyle}">Low:</td><td style="${valueStyle}">${formattedLow}</td></tr><tr><td style="${labelStyle}">Avg:</td><td style="${valueStyle}">${formattedAvg}</td></tr></table>`;
+    } else if (cfg.renderType === 'staggered' || cfg.renderType === 'stacked') {
+      const values = d.values || [];
+      const yAxisLabels = cfg.yAxisLabels || [];
+      const colors = cfg.staggeredColors || ['#4a90d9', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#e67e22'];
+      const title = cfg.title ? `<strong>${cfg.title}</strong><br>` : '';
+      let html = title + `<strong>${d.date}</strong><hr style="margin:4px 0;border:none;border-top:1px solid #ccc;"><table style="${tableStyle}">`;
+      let total = 0;
+      values.forEach((val, idx) => {
+        const label = yAxisLabels[idx] || `Series ${idx + 1}`;
+        const color = colors[idx % colors.length];
+        const circle = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:5px;vertical-align:middle;"></span>`;
+        if (val !== null && val !== undefined) {
+          html += `<tr><td style="${labelStyle}">${circle}${label}:</td><td style="${valueStyle}">${formatNumber(val, numberFormat, numberDecimals, useThousandSeparator)}</td></tr>`;
+          total += val;
+        } else {
+          html += `<tr><td style="${labelStyle}">${circle}${label}:</td><td style="${valueStyle}">—</td></tr>`;
+        }
+      });
+      html += `<tr><td style="${labelStyle}"><strong>Total:</strong></td><td style="${valueStyle}"><strong>${formatNumber(total, numberFormat, numberDecimals, useThousandSeparator)}</strong></td></tr></table>`;
+      return html;
     } else {
       const formattedValue = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
       const title = cfg.title ? `<strong>${cfg.title}</strong><br>` : '';
-      return `${title}Value: ${formattedValue}`;
+      return `${title}<table style="${tableStyle}"><tr><td style="${labelStyle}">Value:</td><td style="${valueStyle}">${formattedValue}</td></tr></table>`;
     }
   }
 
@@ -408,6 +432,16 @@
     if (cfg.renderType === 'high-low') {
       minValue = Math.min(...aggregatedData.map(d => d.lowValue));
       maxValue = Math.max(...aggregatedData.map(d => d.highValue));
+    } else if (cfg.renderType === 'staggered') {
+      // For staggered charts, find min/max across all values arrays
+      const allValues = aggregatedData.flatMap(d => (d.values || []).filter(v => v !== null && v !== undefined));
+      minValue = startAtZero ? 0 : Math.min(...allValues);
+      maxValue = Math.max(...allValues);
+    } else if (cfg.renderType === 'stacked') {
+      // For stacked charts, max is the sum of all values in each data point
+      const sums = aggregatedData.map(d => (d.values || []).filter(v => v !== null && v !== undefined).reduce((a, b) => a + b, 0));
+      minValue = startAtZero ? 0 : Math.min(...sums);
+      maxValue = Math.max(...sums);
     } else {
       minValue = startAtZero ? 0 : Math.min(...aggregatedData.map(d => d.value));
       maxValue = Math.max(...aggregatedData.map(d => d.value));
@@ -799,6 +833,120 @@
         }
 
         barsGroup.appendChild(barGroup);
+      } else if (cfg.renderType === 'staggered') {
+        // Staggered/multi-series bars
+        const values = d.values || [];
+        const seriesCount = values.length;
+        const yAxisLabels = cfg.yAxisLabels || [];
+        const staggeredColors = cfg.staggeredColors || ['#4a90d9', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#e67e22'];
+        const gap = 2; // gap between staggered bars
+        const subBarWidth = seriesCount > 0 ? (barWidth - (seriesCount - 1) * gap) / seriesCount : barWidth;
+        
+        const barGroup = createSVGElement('g', { class: 'staggered-bar-group' });
+        
+        values.forEach((val, seriesIdx) => {
+          if (val === null || val === undefined) return; // skip null/missing values
+          const subX = x + seriesIdx * (subBarWidth + gap);
+          const barHeight = Math.max(1, innerHeight - yScale(val));
+          const subBar = createSVGElement('rect', {
+            x: subX,
+            y: yScale(val),
+            width: subBarWidth,
+            height: barHeight,
+            class: 'bar staggered',
+            fill: staggeredColors[seriesIdx % staggeredColors.length]
+          });
+          barGroup.appendChild(subBar);
+        });
+        
+        if (tooltip) {
+          barGroup.addEventListener('mouseenter', (e) => {
+            if (cfg.tooltipFormatter && typeof cfg.tooltipFormatter === 'function') {
+              tooltip.innerHTML = cfg.tooltipFormatter(d, cfg);
+            } else {
+              let html = `<strong>${d.date}</strong><br>`;
+              let total = 0;
+              values.forEach((val, idx) => {
+                const label = yAxisLabels[idx] || `Series ${idx + 1}`;
+                if (val !== null && val !== undefined) {
+                  html += `${label}: ${formatNumber(val, numberFormat, numberDecimals, useThousandSeparator)}<br>`;
+                  total += val;
+                } else {
+                  html += `${label}: —<br>`;
+                }
+              });
+              html += `<strong>Total: ${formatNumber(total, numberFormat, numberDecimals, useThousandSeparator)}</strong>`;
+              tooltip.innerHTML = html;
+            }
+            tooltip.style.display = 'block';
+            positionTooltip(tooltip, e);
+          });
+          barGroup.addEventListener('mousemove', (e) => {
+            positionTooltip(tooltip, e);
+          });
+          barGroup.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+          });
+        }
+        
+        barsGroup.appendChild(barGroup);
+      } else if (cfg.renderType === 'stacked') {
+        // Stacked bars - bars on top of each other
+        const values = d.values || [];
+        const yAxisLabels = cfg.yAxisLabels || [];
+        const stackedColors = cfg.staggeredColors || ['#4a90d9', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#e67e22'];
+        
+        const barGroup = createSVGElement('g', { class: 'stacked-bar-group' });
+        
+        let cumulativeValue = 0;
+        values.forEach((val, seriesIdx) => {
+          if (val === null || val === undefined || val === 0) return; // skip null/zero values
+          const segmentHeight = Math.max(0, innerHeight - yScale(val) - (innerHeight - yScale(0)));
+          const y = yScale(cumulativeValue + val);
+          
+          const segment = createSVGElement('rect', {
+            x: x,
+            y: y,
+            width: barWidth,
+            height: Math.max(1, segmentHeight),
+            class: 'bar stacked',
+            fill: stackedColors[seriesIdx % stackedColors.length]
+          });
+          barGroup.appendChild(segment);
+          cumulativeValue += val;
+        });
+        
+        if (tooltip) {
+          barGroup.addEventListener('mouseenter', (e) => {
+            if (cfg.tooltipFormatter && typeof cfg.tooltipFormatter === 'function') {
+              tooltip.innerHTML = cfg.tooltipFormatter(d, cfg);
+            } else {
+              let html = `<strong>${d.date}</strong><br>`;
+              let total = 0;
+              values.forEach((val, idx) => {
+                const label = yAxisLabels[idx] || `Series ${idx + 1}`;
+                if (val !== null && val !== undefined) {
+                  html += `${label}: ${formatNumber(val, numberFormat, numberDecimals, useThousandSeparator)}<br>`;
+                  total += val;
+                } else {
+                  html += `${label}: —<br>`;
+                }
+              });
+              html += `<strong>Total: ${formatNumber(total, numberFormat, numberDecimals, useThousandSeparator)}</strong>`;
+              tooltip.innerHTML = html;
+            }
+            tooltip.style.display = 'block';
+            positionTooltip(tooltip, e);
+          });
+          barGroup.addEventListener('mousemove', (e) => {
+            positionTooltip(tooltip, e);
+          });
+          barGroup.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+          });
+        }
+        
+        barsGroup.appendChild(barGroup);
       } else {
         const barHeight = Math.max(1, innerHeight - yScale(d.value));
         const bar = createSVGElement('rect', {
@@ -859,7 +1007,18 @@
     const barPositions = aggregatedData.map((d, i) => {
       const x = i * barStep;
       const barCenterX = x + barStep / 2;
-      const barTopY = yScale(d.value);
+      let barTopY;
+      if (cfg.renderType === 'stacked' && d.values) {
+        // For stacked, show circle at the top of the stacked bar (sum of all values)
+        const total = d.values.filter(v => v !== null && v !== undefined).reduce((sum, v) => sum + v, 0);
+        barTopY = yScale(total);
+      } else if (cfg.renderType === 'staggered' && d.values) {
+        // For staggered, show circle at the max value across series
+        const maxVal = Math.max(...d.values.filter(v => v !== null && v !== undefined));
+        barTopY = yScale(maxVal);
+      } else {
+        barTopY = yScale(d.value);
+      }
       return { x, barCenterX, barTopY, data: d, index: i };
     });
 
@@ -902,7 +1061,15 @@
         
         // Calculate the y position for the circle (top of bar in normal mode, average value in high-low mode)
         let barTopY;
-        if (cfg.renderType === 'high-low') {
+        if (cfg.renderType === 'stacked' && d.values) {
+          // For stacked, show circle at the top of the stacked bar (sum of all values)
+          const total = d.values.filter(v => v !== null && v !== undefined).reduce((sum, v) => sum + v, 0);
+          barTopY = yScale(total);
+        } else if (cfg.renderType === 'staggered' && d.values) {
+          // For staggered, show circle at the max value across series
+          const maxVal = Math.max(...d.values.filter(v => v !== null && v !== undefined));
+          barTopY = yScale(maxVal);
+        } else if (cfg.renderType === 'high-low') {
           // In high-low mode, show circle at the average value marker position
           barTopY = yScale(d.value);
         } else {
@@ -929,16 +1096,39 @@
           hoverCircle.setAttribute('cy', barTopY);
           
           // Use custom formatter if provided, otherwise use default
+          const tableStyle = 'border-collapse:collapse;width:100%;';
+          const labelStyle = 'text-align:left;padding-right:10px;';
+          const valueStyle = 'text-align:right;font-weight:500;';
+          
           if (cfg.tooltipFormatter && typeof cfg.tooltipFormatter === 'function') {
             tooltip.innerHTML = cfg.tooltipFormatter(d, cfg);
+          } else if (cfg.renderType === 'staggered' || cfg.renderType === 'stacked') {
+            const values = d.values || [];
+            const yAxisLabels = cfg.yAxisLabels || [];
+            const colors = cfg.staggeredColors || ['#4a90d9', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#e67e22'];
+            let html = `<strong>${d.date}</strong><hr style="margin:4px 0;border:none;border-top:1px solid #ccc;"><table style="${tableStyle}">`;
+            let total = 0;
+            values.forEach((val, idx) => {
+              const label = yAxisLabels[idx] || `Series ${idx + 1}`;
+              const color = colors[idx % colors.length];
+              const circle = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:5px;vertical-align:middle;"></span>`;
+              if (val !== null && val !== undefined) {
+                html += `<tr><td style="${labelStyle}">${circle}${label}:</td><td style="${valueStyle}">${formatNumber(val, numberFormat, numberDecimals, useThousandSeparator)}</td></tr>`;
+                total += val;
+              } else {
+                html += `<tr><td style="${labelStyle}">${circle}${label}:</td><td style="${valueStyle}">—</td></tr>`;
+              }
+            });
+            html += `<tr><td style="${labelStyle}"><strong>Total:</strong></td><td style="${valueStyle}"><strong>${formatNumber(total, numberFormat, numberDecimals, useThousandSeparator)}</strong></td></tr></table>`;
+            tooltip.innerHTML = html;
           } else if (cfg.renderType === 'high-low') {
             const formattedHigh = formatNumber(d.highValue, numberFormat, numberDecimals, useThousandSeparator);
             const formattedLow = formatNumber(d.lowValue, numberFormat, numberDecimals, useThousandSeparator);
             const formattedAvg = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
-            tooltip.innerHTML = `<strong>${d.date}</strong><br>High: ${formattedHigh}<br>Low: ${formattedLow}<br>Avg: ${formattedAvg}`;
+            tooltip.innerHTML = `<strong>${d.date}</strong><table style="${tableStyle}"><tr><td style="${labelStyle}">High:</td><td style="${valueStyle}">${formattedHigh}</td></tr><tr><td style="${labelStyle}">Low:</td><td style="${valueStyle}">${formattedLow}</td></tr><tr><td style="${labelStyle}">Avg:</td><td style="${valueStyle}">${formattedAvg}</td></tr></table>`;
           } else {
             const formattedValue = formatNumber(d.value, numberFormat, numberDecimals, useThousandSeparator);
-            tooltip.innerHTML = `<strong>${d.date}</strong><br>Value: ${formattedValue}`;
+            tooltip.innerHTML = `<strong>${d.date}</strong><table style="${tableStyle}"><tr><td style="${labelStyle}">Value:</td><td style="${valueStyle}">${formattedValue}</td></tr></table>`;
           }
           tooltip.style.display = 'block';
           positionTooltip(tooltip, e);
@@ -1302,7 +1492,15 @@
     const cfg = { ...defaults, ...config };
 
     // Helper function to normalize and aggregate data for a single dataset
-    function processData(rawData) {
+    function processData(rawData, chartCfg) {
+      // For staggered/stacked charts, preserve the values array without filtering by value
+      if (chartCfg && (chartCfg.renderType === 'staggered' || chartCfg.renderType === 'stacked')) {
+        return rawData.map(d => ({
+          date: (d.date instanceof Date ? d.date : new Date(d.date)).toISOString().split('T')[0],
+          values: d.values || []
+        })).filter(d => d.date !== 'Invalid Date');
+      }
+      
       const normalized = rawData.map(d => ({
         date: d.date instanceof Date ? d.date : new Date(d.date),
         value: Number(d.value),
@@ -1334,7 +1532,8 @@
     // Process shared data (for backwards compatibility and x-axis rendering)
     let sharedAggregatedData = [];
     if (cfg.data && cfg.data.length > 0) {
-      sharedAggregatedData = processData(cfg.data);
+      // Use the first chart's config for processing shared data
+      sharedAggregatedData = processData(cfg.data, cfg.charts[0] || {});
     }
 
     // If using per-chart data, process each chart's data separately
@@ -1342,7 +1541,7 @@
     if (hasPerChartData) {
       cfg.charts.forEach((chartCfg, index) => {
         const chartData = chartCfg.data && chartCfg.data.length > 0 ? chartCfg.data : cfg.data;
-        const aggregated = processData(chartData);
+        const aggregated = processData(chartData, chartCfg);
         chartDataSets.push(aggregated);
         
         // Use the first chart's data for x-axis if no shared data
@@ -1352,8 +1551,10 @@
       });
     } else {
       // All charts use the same shared data
-      cfg.charts.forEach(() => {
-        chartDataSets.push(sharedAggregatedData);
+      cfg.charts.forEach((chartCfg) => {
+        // Re-process for each chart in case of different renderTypes
+        const aggregated = processData(cfg.data, chartCfg);
+        chartDataSets.push(aggregated);
       });
     }
 
@@ -1522,7 +1723,7 @@
             let tooltipContent = `<strong>${dateLabel}</strong><hr style="margin: 4px 0; border: none; border-top: 1px solid #ddd;">`;
             
             allChartHoverData.forEach(chartHover => {
-              tooltipContent += '<br>' + chartHover.getTooltipContent(i) + '<br>';
+              tooltipContent += '<br>' + chartHover.getTooltipContent(i);
             });
             
             tooltip.innerHTML = tooltipContent;
@@ -1671,6 +1872,8 @@
       showGrid: true,
       title: '',
       yAxisLabel: '',
+      yAxisLabels: [],        // For staggered charts: labels for each series
+      staggeredColors: ['#4a90d9', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c', '#34495e', '#e67e22'],
       xAxisLabel: '',
       barMinWidth: 8,
       yAxisScale: 'linear',   // 'linear' or 'log10'
@@ -1701,6 +1904,8 @@
         renderType: cfg.renderType,
         title: cfg.title,
         yAxisLabel: cfg.yAxisLabel,
+        yAxisLabels: cfg.yAxisLabels,
+        staggeredColors: cfg.staggeredColors,
         barColor: cfg.barColor,
         highLowColor: cfg.highLowColor,
         avgMarkerColor: cfg.avgMarkerColor,
